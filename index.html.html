@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fusha Zone - السبورة التفاعلية</title>
+<style>
+:root{
+  --brand-dark:#12121f;
+  --brand-blue:#4361ee;
+  --brand-pink:#f72585;
+  --shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+html,body{width:100%;height:100%;overflow:hidden;}
+button{font-family:inherit;}
+:focus-visible{outline:3px solid var(--brand-blue);outline-offset:2px;}
+
+/* ===== App Shell ===== */
+#app-shell{width:100vw;height:100vh;display:flex;flex-direction:column;background:var(--brand-dark);}
+#appbar{
+  height:52px;flex:0 0 52px;background:var(--brand-dark);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;box-shadow:0 2px 10px rgba(0,0,0,0.35);z-index:500;position:relative;
+}
+.appbar-brand{display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:bold;letter-spacing:0.5px;}
+.appbar-brand i{color:var(--brand-pink);}
+.appbar-back{
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;
+  padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;gap:8px;
+  transition:0.2s;
+}
+.appbar-back:hover{background:var(--brand-pink);border-color:var(--brand-pink);}
+
+#app-main{flex:1 1 auto;position:relative;overflow:hidden;}
+.app-mode{position:absolute;inset:0;display:none;}
+.app-mode.active{display:block;}
+
+/* ===== BOARD MODE ===== */
+#mode-board{
+  --primary-color:#4361ee;--accent-color:#f72585;--bg-white:#ffffff;--bg-dark-b:#1e1e1e;
+  --text-dark:#333333;--text-light:#ffffff;--toolbar-bg:rgba(255,255,255,0.95);
+}
+#board-container{
+  width:100%;height:100%;background-color:var(--bg-white);position:relative;
+  transition:background 0.3s ease;display:flex;justify-content:center;align-items:center;
+}
+#board-container.bg-grid{
+  background-size:40px 40px;
+  background-image:linear-gradient(to right, lightgray 1px, transparent 1px),
+                    linear-gradient(to bottom, lightgray 1px, transparent 1px);
+  background-color:var(--bg-white);
+}
+#board-container.bg-dark-mode{background-color:var(--bg-dark-b);background-image:none;}
+
+#board-stage{position:relative;width:82%;height:64%;}
+#board-text{
+  position:absolute;inset:0;width:100%;height:100%;background:transparent;border:none;outline:none;
+  font-size:3rem;color:var(--text-dark);text-align:center;resize:none;line-height:1.5;
+  font-family:'Traditional Arabic','Segoe UI',Tahoma,serif;z-index:11;
+}
+#board-container.bg-dark-mode #board-text{color:var(--text-light);}
+#board-stage.mode-draw #board-text{pointer-events:none;}
+#board-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:12;touch-action:none;cursor:crosshair;}
+#board-stage.mode-write #board-canvas{pointer-events:none;}
+
+.toolbar{
+  position:absolute;left:50%;transform:translateX(-50%);background:var(--toolbar-bg);
+  padding:10px 20px;border-radius:30px;box-shadow:var(--shadow);display:flex;gap:16px;
+  z-index:100;backdrop-filter:blur(5px);border:1px solid rgba(0,0,0,0.05);flex-wrap:wrap;justify-content:center;max-width:92%;
+}
+.top-toolbar{top:16px;}
+.bottom-toolbar{bottom:16px;}
+
+.icon-btn{
+  background:none;border:none;font-size:22px;color:var(--primary-color);cursor:pointer;
+  transition:all 0.2s ease;position:relative;padding:10px;border-radius:50%;
+}
+.icon-btn:hover{color:var(--accent-color);background:rgba(247,37,133,0.1);transform:scale(1.1);}
+.icon-btn.is-active{background:var(--primary-color);color:#fff;}
+.color-tajweed{color:#2a9d8f;}
+.color-games{color:#e76f51;}
+.color-upload{color:#f4a261;}
+
+.icon-btn::after{
+  content:attr(data-title);position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.85);color:#fff;font-size:12px;padding:4px 8px;border-radius:4px;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.icon-btn:hover::after{opacity:1;}
+
+#side-panel{
+  position:absolute;top:0;right:-340px;width:300px;height:100%;background:#fff;
+  box-shadow:-5px 0 15px rgba(0,0,0,0.15);transition:right 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index:200;padding:20px;display:flex;flex-direction:column;
+}
+#side-panel.active{right:0;}
+.panel-header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #eee;padding-bottom:15px;margin-bottom:20px;}
+.panel-title{font-size:1.15rem;color:var(--primary-color);font-weight:bold;}
+.close-btn{background:none;border:none;font-size:20px;color:#999;cursor:pointer;}
+.close-btn:hover{color:var(--accent-color);}
+.panel-content{flex-grow:1;font-size:1rem;color:var(--text-dark);overflow-y:auto;}
+#side-panel.dark-panel{background:#242436;color:#fff;}
+#side-panel.dark-panel .panel-title{color:var(--accent-color);}
+#side-panel.dark-panel .panel-content{color:#eee;}
+
+.bg-controls{
+  position:absolute;top:16px;right:16px;background:var(--toolbar-bg);padding:10px;border-radius:15px;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;z-index:100;
+}
+
+.mode-toggle{display:flex;gap:10px;margin-bottom:18px;}
+.mode-toggle button{
+  flex:1;padding:12px;border-radius:10px;border:2px solid var(--primary-color);background:#fff;
+  color:var(--primary-color);font-weight:bold;cursor:pointer;transition:0.2s;
+}
+.mode-toggle button.selected{background:var(--primary-color);color:#fff;}
+#side-panel.dark-panel .mode-toggle button{background:#242436;}
+#side-panel.dark-panel .mode-toggle button.selected{background:var(--accent-color);border-color:var(--accent-color);}
+
+.brush-sizes{display:flex;gap:12px;margin-bottom:18px;}
+.brush-dot{
+  border-radius:50%;background:var(--text-dark,#333);cursor:pointer;border:3px solid transparent;
+  display:flex;align-items:center;justify-content:center;background:#333;
+}
+#side-panel.dark-panel .brush-dot{background:#eee;}
+.brush-dot.selected{border-color:var(--primary-color);}
+
+.swatch-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.swatch{width:44px;height:44px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:0.15s;}
+.swatch.selected{border-color:#000;transform:scale(1.1);}
+#side-panel.dark-panel .swatch.selected{border-color:#fff;}
+
+.tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.tool-chip{
+  display:flex;align-items:center;gap:8px;background:#f8f9fa;border:2px solid #ddd;border-radius:12px;
+  padding:12px 10px;font-size:0.92rem;font-weight:bold;color:var(--text-dark);cursor:pointer;transition:0.2s;
+}
+.tool-chip .tc-emoji{font-size:1.3rem;}
+.tool-chip.selected{background:var(--primary-color);color:#fff;border-color:var(--primary-color);}
+#side-panel.dark-panel .tool-chip{background:#2c2c40;border-color:#444;color:#eee;}
+#side-panel.dark-panel .tool-chip.selected{background:var(--accent-color);border-color:var(--accent-color);}
+
+.color-wheel{position:relative;width:180px;height:180px;margin:0 auto;}
+.wheel-swatch{
+  position:absolute;width:36px;height:36px;border-radius:50%;cursor:pointer;
+  border:3px solid rgba(255,255,255,0.9);box-shadow:0 2px 6px rgba(0,0,0,0.3);transition:transform 0.15s;
+}
+.wheel-swatch:hover{transform:scale(1.15);}
+.wheel-swatch.selected{border-color:#000;transform:scale(1.2);z-index:2;}
+#side-panel.dark-panel .wheel-swatch.selected{border-color:#fff;}
+.wheel-center{
+  position:absolute;left:66px;top:66px;width:48px;height:48px;border-radius:50%;
+  border:3px solid #ccc;box-shadow:inset 0 0 8px rgba(0,0,0,0.3);
+}
+
+.tashkeel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px;}
+.tashkeel-btn{
+  background:#f8f9fa;border:1px solid #ddd;padding:15px 10px;border-radius:8px;font-size:1.2rem;
+  cursor:pointer;transition:all 0.2s;color:var(--primary-color);font-weight:bold;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.tashkeel-btn span{font-size:0.75rem;color:#666;font-weight:normal;}
+.tashkeel-btn:hover{background:var(--primary-color);color:#fff;}
+.tashkeel-btn:hover span{color:#f0f0f0;}
+#side-panel.dark-panel .tashkeel-btn{background:#333;border-color:#444;color:#fff;}
+#side-panel.dark-panel .tashkeel-btn span{color:#aaa;}
+#side-panel.dark-panel .tashkeel-btn:hover{background:var(--accent-color);border-color:var(--accent-color);}
+
+.floating-window{
+  position:absolute;top:120px;left:80px;min-width:280px;min-height:180px;background:#fff;
+  border:2px solid var(--primary-color);border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.25);
+  resize:both;overflow:auto;z-index:150;display:flex;flex-direction:column;
+}
+.floating-header{
+  background:var(--primary-color);color:#fff;padding:10px;cursor:grab;display:flex;
+  justify-content:space-between;align-items:center;font-size:0.9rem;
+}
+.floating-header:active{cursor:grabbing;}
+.close-floating{background:none;border:none;color:#fff;cursor:pointer;font-size:1.2rem;}
+.floating-content{flex-grow:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;}
+.floating-content img,.floating-content video,.floating-content iframe{width:100%;height:100%;object-fit:contain;border:none;}
+
+/* ===== GAMES MODE ===== */
+#mode-games{
+  --game-bg:#0d0d1a;--neon-blue:#00f3ff;--neon-pink:#ff007f;--neon-green:#39ff14;--neon-yellow:#fefe33;
+  --neon-orange:#ff8c1a;--neon-purple:#b967ff;
+  --g-text-light:#ffffff;--g-panel-bg:rgba(255,255,255,0.1);
+}
+#game-portal{
+  width:100%;height:100%;position:relative;display:flex;flex-direction:column;
+  background-color:var(--game-bg);color:var(--g-text-light);
+  background-image:radial-gradient(circle at center,#16213e 0%,#0a0a18 100%);overflow:hidden;
+}
+.game-header{
+  display:flex;justify-content:space-between;align-items:center;padding:10px 22px;
+  background:rgba(0,0,0,0.35);border-bottom:2px solid var(--neon-blue);
+  box-shadow:0 0 15px rgba(0,243,255,0.3);font-size:1.15rem;font-weight:bold;z-index:200;flex-wrap:wrap;gap:8px;
+}
+.stat-box{display:flex;align-items:center;gap:8px;background:var(--g-panel-bg);padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);}
+.timer{color:var(--neon-yellow);}
+.timer.timer-low{color:var(--neon-pink);animation:pulse-warn 0.6s infinite;}
+.score{color:var(--neon-green);}
+.high-score{color:var(--neon-pink);font-size:1rem;}
+@keyframes pulse-warn{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+
+.screen{flex-grow:1;display:none;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:16px;overflow:auto;}
+.screen.active{display:flex;}
+
+.g-btn{
+  background:linear-gradient(45deg,var(--neon-blue),#0056ff);border:none;padding:14px 36px;margin:8px;
+  border-radius:30px;color:#fff;font-size:1.3rem;cursor:pointer;transition:all 0.3s;
+  box-shadow:0 5px 15px rgba(0,243,255,0.4);font-weight:bold;
+}
+.g-btn:hover{transform:scale(1.06);box-shadow:0 5px 25px var(--neon-blue);}
+.g-btn-pink{background:linear-gradient(45deg,var(--neon-pink),#ff0033);box-shadow:0 5px 15px rgba(255,0,127,0.4);}
+.g-btn-pink:hover{box-shadow:0 5px 25px var(--neon-pink);}
+.g-btn-green{background:linear-gradient(45deg,var(--neon-green),#00cc00);box-shadow:0 5px 15px rgba(57,255,20,0.4);}
+.g-btn-green:hover{box-shadow:0 5px 25px var(--neon-green);}
+.g-btn-purple{background:linear-gradient(45deg,var(--neon-purple),#5b1fb0);box-shadow:0 5px 15px rgba(185,103,255,0.4);}
+.g-btn-purple:hover{box-shadow:0 5px 25px var(--neon-purple);}
+.g-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+#mode-games h1{font-size:2.2rem;margin-bottom:20px;text-shadow:0 0 10px var(--neon-blue);text-align:center;}
+#mode-games h2{font-size:1.5rem;}
+
+/* بطاقات اختيار الألعاب بالقائمة الرئيسية */
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;max-width:980px;width:100%;}
+.game-card{
+  background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.12);border-radius:18px;
+  padding:22px 14px;text-align:center;cursor:pointer;transition:all 0.25s;
+}
+.game-card:hover{transform:translateY(-6px);border-color:var(--neon-blue);box-shadow:0 10px 25px rgba(0,243,255,0.25);}
+.game-card .g-emoji{font-size:2.6rem;display:block;margin-bottom:10px;}
+.game-card .g-name{font-size:1.05rem;font-weight:bold;}
+
+/* شاشة اختيار المستوى */
+.level-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+.level-card{
+  background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.15);border-radius:16px;
+  padding:18px 22px;min-width:170px;cursor:pointer;transition:all 0.2s;text-align:center;
+}
+.level-card:hover{transform:translateY(-4px);}
+.level-card .lc-title{font-size:1.2rem;font-weight:bold;margin-bottom:6px;}
+.level-card .lc-time{font-size:0.85rem;opacity:0.8;margin-bottom:4px;}
+.level-card .lc-points{font-size:0.8rem;opacity:0.7;}
+.level-card.easy{border-color:var(--neon-green);}
+.level-card.easy .lc-title{color:var(--neon-green);}
+.level-card.medium{border-color:var(--neon-yellow);}
+.level-card.medium .lc-title{color:var(--neon-yellow);}
+.level-card.hard{border-color:var(--neon-pink);}
+.level-card.hard .lc-title{color:var(--neon-pink);}
+
+/* ===== لعبة 1: ملعب كرة القدم ===== */
+#pitch{
+  width:100%;max-width:760px;height:100%;max-height:480px;position:relative;border-radius:16px;overflow:hidden;
+  background:repeating-linear-gradient(180deg,#1c8a3e 0 40px,#22a047 40px 80px);
+  border:4px solid #fff;box-shadow:0 0 30px rgba(0,0,0,0.5);
+}
+#pitch::before{content:'';position:absolute;left:50%;top:50%;width:140px;height:140px;margin:-70px 0 0 -70px;border:3px solid rgba(255,255,255,0.7);border-radius:50%;}
+.goal-row{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:0 10px;z-index:5;}
+.goal-zone{
+  background:rgba(255,255,255,0.92);border:3px solid #12121f;border-radius:10px;padding:10px 14px;
+  cursor:pointer;font-weight:bold;font-size:1.05rem;color:#12121f;transition:all 0.15s;min-width:76px;text-align:center;
+  box-shadow:0 4px 0 rgba(0,0,0,0.3);
+}
+.goal-zone:hover{transform:translateY(-3px);}
+.goal-zone:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,0.3);}
+.goal-zone .gz-sym{display:block;font-size:1.5rem;}
+#ball-wrap{position:absolute;left:50%;bottom:60px;transform:translateX(-50%);z-index:6;transition:all 0.5s cubic-bezier(.2,.9,.3,1.2);}
+#ball-letter{
+  width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#e8e8e8 60%,#bbb);
+  display:flex;align-items:center;justify-content:center;font-size:2.6rem;font-weight:bold;color:#12121f;
+  box-shadow:0 6px 14px rgba(0,0,0,0.4);border:3px solid #12121f;
+}
+#ball-wrap.flying{transition:all 0.45s ease-in;}
+#ball-wrap.wrong{animation:ball-shake 0.35s;}
+@keyframes ball-shake{0%,100%{transform:translateX(-50%);}25%{transform:translateX(-62%);}75%{transform:translateX(-38%);}}
+#pitch-instruction{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);
+  padding:8px 20px;border-radius:20px;font-size:1.1rem;z-index:6;
+}
+
+/* ===== لعبة 2: توصيل النقاط ===== */
+#dots-wrap{width:100%;max-width:560px;height:100%;max-height:520px;position:relative;}
+#dots-canvas{position:absolute;inset:0;width:100%;height:100%;}
+.dot-point{
+  position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--neon-yellow);
+  color:#12121f;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.9rem;
+  cursor:pointer;box-shadow:0 0 10px var(--neon-yellow);z-index:5;transition:transform 0.15s;
+}
+.dot-point.done{background:var(--neon-green);box-shadow:0 0 12px var(--neon-green);transform:scale(0.85);}
+.dot-point.wrong-dot{animation:ball-shake 0.3s;background:var(--neon-pink);}
+#shape-reveal-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:1.4rem;background:rgba(0,0,0,0.6);padding:8px 22px;border-radius:20px;z-index:6;}
+
+/* ===== لعبة 3: صيد الحروف (بركة أسماك) ===== */
+#game-catch-area{
+  width:100%;height:100%;position:relative;overflow:hidden;border-radius:16px;
+  background:linear-gradient(180deg,#0a3d62 0%,#1e6091 60%,#2a9df4 100%);
+}
+.water-bubble{position:absolute;bottom:-30px;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.35);animation:bubble-rise linear forwards;}
+@keyframes bubble-rise{to{transform:translateY(-620px);opacity:0;}}
+.floating-letter{
+  position:absolute;font-size:2.1rem;font-weight:bold;color:#0a3d62;cursor:pointer;user-select:none;
+  transition:transform 0.1s;
+  background:rgba(255,255,255,0.95);border:3px solid #fff;border-radius:50% 50% 50% 10px;
+  width:64px;height:64px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(0,0,0,0.35);
+}
+.floating-letter:active{transform:scale(0.8);}
+#target-instruction{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:1.3rem;background:rgba(0,0,0,0.55);
+  padding:8px 22px;border-radius:20px;border:2px solid var(--neon-yellow);z-index:10;
+}
+
+/* ===== لعبة 4: تركيب الكلمات ===== */
+#word-preview{font-size:2.8rem;font-weight:bold;background:rgba(255,255,255,0.08);border:2px solid var(--neon-yellow);border-radius:16px;padding:14px 34px;margin-bottom:20px;color:var(--neon-yellow);}
+.drop-zone-container{display:flex;gap:10px;margin-bottom:34px;direction:ltr;flex-wrap:wrap;justify-content:center;}
+.drop-box{width:66px;height:66px;border:3px dashed var(--neon-blue);border-radius:15px;display:flex;justify-content:center;align-items:center;font-size:2.2rem;background:rgba(0,243,255,0.1);}
+.letters-container{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;}
+.draggable-letter{
+  width:66px;height:66px;background:var(--neon-green);color:#000;font-size:2.2rem;display:flex;
+  justify-content:center;align-items:center;border-radius:15px;cursor:grab;font-weight:bold;box-shadow:0 0 15px var(--neon-green);
+  touch-action:none;
+}
+#hint-btn{background:linear-gradient(45deg,var(--neon-orange),#c65b00);border:none;padding:10px 26px;border-radius:20px;color:#fff;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(255,140,26,0.4);}
+
+/* ===== لعبة 5: ذاكرة أحكام التجويد ===== */
+.memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;perspective:1000px;}
+.memory-card{width:104px;height:104px;background:transparent;cursor:pointer;position:relative;transform-style:preserve-3d;transition:transform 0.5s;}
+.memory-card.flipped{transform:rotateY(180deg);}
+.card-face{
+  position:absolute;width:100%;height:100%;backface-visibility:hidden;display:flex;justify-content:center;
+  align-items:center;font-size:1.2rem;font-weight:bold;border-radius:15px;box-shadow:0 0 10px rgba(255,255,255,0.2);
+  text-align:center;padding:5px;
+}
+.card-front{background:linear-gradient(135deg,var(--neon-blue),#0056ff);color:#fff;transform:rotateY(180deg);border:2px solid #fff;}
+.card-back{background:linear-gradient(135deg,var(--neon-pink),#ff0033);font-size:2.4rem;color:#fff;}
+
+/* ===== مؤثرات عامة: قصاصات احتفال ===== */
+.confetti-piece{position:fixed;top:0;left:0;width:10px;height:10px;pointer-events:none;z-index:9999;border-radius:2px;}
+
+/* ===== MUSHAF MODE ===== */
+#mode-mushaf{
+  --md-bg-dark:#121220;--md-panel-bg:#1e1e36;--md-text-light:#ffffff;
+  --md-red:#ff2a5f;--md-green:#00ff88;--md-blue:#00d4ff;--md-highlight:rgba(255,255,0,0.2);
+}
+#mushaf-root{width:100%;height:100%;background-color:var(--md-bg-dark);color:var(--md-text-light);display:flex;flex-direction:column;overflow:hidden;}
+.tabs-header{display:flex;background:#0f0f1b;padding:8px 20px;box-shadow:0 4px 15px rgba(0,0,0,0.5);z-index:10;}
+.md-tab-btn{
+  flex:1;padding:14px;background:transparent;border:none;color:#888;font-size:1.25rem;font-weight:bold;
+  cursor:pointer;transition:0.3s;border-bottom:4px solid transparent;
+}
+.md-tab-btn.active{color:#fff;border-bottom:4px solid var(--md-blue);text-shadow:0 0 10px var(--md-blue);}
+.md-tab-content{display:none;height:calc(100% - 60px);position:relative;}
+.md-tab-content.active{display:flex;flex-direction:column;}
+
+.quran-container{flex-grow:1;padding:20px 30px;overflow-y:auto;text-align:center;font-family:'Traditional Arabic',serif;font-size:2.8rem;line-height:2;}
+.ayah{display:inline;cursor:pointer;padding:5px 10px;border-radius:10px;transition:background 0.3s;}
+.ayah:hover,.ayah.active-ayah{background:var(--md-highlight);}
+.rule-madd{color:var(--md-red);text-shadow:0 0 8px rgba(255,42,95,0.6);}
+.rule-ikhfa{color:var(--md-green);text-shadow:0 0 8px rgba(0,255,136,0.6);}
+.rule-qalqalah{color:var(--md-blue);text-shadow:0 0 8px rgba(0,212,255,0.6);}
+
+.surah-bar{display:flex;gap:8px;padding:12px 20px;overflow-x:auto;background:#0a0a14;border-bottom:1px solid rgba(255,255,255,0.08);}
+.surah-chip{
+  flex:0 0 auto;background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.15);border-radius:14px;
+  padding:8px 18px;font-size:0.95rem;font-weight:bold;color:#ccc;cursor:pointer;white-space:nowrap;transition:0.2s;
+}
+.surah-chip.active{background:var(--md-blue);color:#0a0a14;border-color:var(--md-blue);}
+.tajweed-legend{display:flex;gap:16px;justify-content:center;padding:8px 20px;font-size:0.82rem;flex-wrap:wrap;background:#0a0a14;}
+.tajweed-legend span{display:flex;align-items:center;gap:6px;}
+.legend-dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+.tts-note{font-size:0.72rem;color:#888;text-align:center;padding:4px 20px;}
+
+.explanation-panel{
+  position:absolute;bottom:-160px;left:50%;transform:translateX(-50%);width:82%;background:var(--md-panel-bg);
+  padding:18px;border-radius:20px 20px 0 0;border-top:3px solid var(--md-blue);box-shadow:0 -5px 20px rgba(0,0,0,0.5);
+  transition:bottom 0.4s cubic-bezier(0.175,0.885,0.32,1.275);display:flex;align-items:center;justify-content:center;gap:18px;font-size:1.25rem;
+}
+.explanation-panel.show{bottom:0;}
+
+.coloring-game{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:30px;padding:20px;}
+.hollow-text-container{font-family:'Traditional Arabic',serif;font-size:4rem;direction:rtl;}
+.hollow-word{display:inline-block;margin:0 10px;}
+.hollow-char{color:transparent;-webkit-text-stroke:2px #555;cursor:pointer;transition:all 0.3s;display:inline-block;}
+.hollow-char:hover{transform:scale(1.1);-webkit-text-stroke:2px #fff;}
+.colored-red{color:var(--md-red);-webkit-text-stroke:0;text-shadow:0 0 20px var(--md-red);transform:scale(1.1);}
+.colored-green{color:var(--md-green);-webkit-text-stroke:0;text-shadow:0 0 20px var(--md-green);transform:scale(1.1);}
+.colored-blue{color:var(--md-blue);-webkit-text-stroke:0;text-shadow:0 0 20px var(--md-blue);transform:scale(1.1);}
+
+.pens-palette{display:flex;gap:26px;background:rgba(0,0,0,0.3);padding:18px;border-radius:50px;border:1px solid rgba(255,255,255,0.1);}
+.md-pen{
+  width:56px;height:56px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.2s;
+  display:flex;justify-content:center;align-items:center;font-size:1.4rem;color:#fff;
+}
+.pen-red{background:var(--md-red);box-shadow:0 0 15px var(--md-red);}
+.pen-green{background:var(--md-green);box-shadow:0 0 15px var(--md-green);}
+.pen-blue{background:var(--md-blue);box-shadow:0 0 15px var(--md-blue);}
+.md-pen.active-pen{transform:translateY(-12px) scale(1.15);border:3px solid #fff;}
+
+.md-level-bar{display:flex;gap:10px;justify-content:center;padding:10px;}
+.md-level-btn{background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);color:#eee;padding:6px 18px;border-radius:16px;cursor:pointer;font-weight:bold;font-size:0.85rem;}
+.md-level-btn.active{background:var(--md-green);color:#0a0a14;border-color:var(--md-green);}
+#tts-btn{background:none;border:2px solid var(--md-blue);color:var(--md-blue);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1.1rem;margin-inline-start:10px;}
+#tts-btn.speaking{animation:pulse-warn 0.5s infinite;background:var(--md-blue);color:#0a0a14;}
+
+.md-game-header{display:flex;width:82%;justify-content:space-between;font-size:1.6rem;color:var(--md-blue);flex-wrap:wrap;gap:10px;}
+
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-10px);}75%{transform:translateX(10px);}}
+.shake-error{animation:shake 0.4s ease-in-out;color:#ff0000 !important;-webkit-text-stroke:0;}
+
+@media (max-width:720px){
+  #board-text{font-size:2rem;}
+  .toolbar{gap:8px;padding:8px 14px;}
+  .icon-btn{font-size:18px;padding:8px;}
+  .quran-container{font-size:1.8rem;}
+  .hollow-text-container{font-size:2.6rem;}
+}
+</style>
+</head>
+<body>
+<div id="app-shell">
+  <header id="appbar">
+    <div class="appbar-brand">🖍️ Fusha Zone</div>
+    <button id="appbar-back" class="appbar-back" onclick="App.switchMode('board')" style="display:none;">
+      🏠 رجوع للسبورة
+    </button>
+  </header>
+
+  <main id="app-main">
+
+    <!-- ===================== BOARD MODE ===================== -->
+    <section id="mode-board" class="app-mode active">
+      <div id="board-container">
+
+        <div class="bg-controls">
+          <button class="icon-btn" onclick="Board.changeBg('white',this)" data-title="خلفية بيضاء">⬜</button>
+          <button class="icon-btn" onclick="Board.changeBg('grid',this)" data-title="شبكة مربعات">🔳</button>
+          <button class="icon-btn" onclick="Board.changeBg('dark',this)" data-title="الوضع الداكن">🌙</button>
+        </div>
+
+        <div id="board-stage" class="mode-write">
+          <textarea id="board-text" placeholder="اكتب هنا... ثم افتح لوحة (التشكيل) لإضافة الحركات"></textarea>
+          <canvas id="board-canvas"></canvas>
+        </div>
+
+        <input type="file" id="file-uploader" accept="image/png, image/jpeg, application/pdf" style="display:none;" onchange="Board.handleFileUpload(event)">
+
+        <div class="toolbar top-toolbar">
+          <button class="icon-btn" onclick="Board.openPanel('tashkeel')" data-title="التشكيل والمدود">🔤</button>
+          <button class="icon-btn" onclick="Board.openPanel('pens')" data-title="الأقلام والفرش">🖊️</button>
+          <button class="icon-btn" onclick="Board.openPanel('colors')" data-title="الألوان">🎨</button>
+          <button class="icon-btn color-upload" onclick="document.getElementById('file-uploader').click()" data-title="رفع صور وPDF">📤</button>
+          <button class="icon-btn" onclick="Board.startScreenShare()" data-title="مشاركة الشاشة">🖥️</button>
+        </div>
+
+        <div class="toolbar bottom-toolbar">
+          <button class="icon-btn color-tajweed" onclick="App.switchMode('mushaf')" data-title="مصحف التجويد">📖</button>
+          <button class="icon-btn color-games" onclick="App.switchMode('games')" data-title="ألعاب الذكاء">🧩</button>
+          <button class="icon-btn" onclick="Board.clearBoard()" data-title="الممحاة">🧹</button>
+        </div>
+
+        <div id="side-panel">
+          <div class="panel-header">
+            <span class="panel-title" id="panel-title">عنوان الأداة</span>
+            <button class="close-btn" onclick="Board.closePanel()">✕</button>
+          </div>
+          <div class="panel-content" id="panel-content"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== GAMES MODE ===================== -->
+    <section id="mode-games" class="app-mode">
+      <div id="game-portal">
+        <div class="game-header">
+          <button class="g-btn g-btn-pink" style="padding:6px 16px;font-size:0.95rem;margin:0;" onclick="Games.showScreen('menu-screen')">
+            🏠 قائمة الألعاب
+          </button>
+          <div class="stat-box high-score">🏆 أعلى نتيجة: <span id="ui-highscore">0</span></div>
+          <div class="stat-box score">⭐ النقاط: <span id="ui-score">0</span></div>
+          <div class="stat-box timer">⏱️ <span id="ui-timer">00:00</span></div>
+        </div>
+
+        <div id="menu-screen" class="screen active">
+          <h1 style="color:var(--neon-yellow);">🎮 منصة ألعاب الذكاء</h1>
+          <div class="games-grid">
+            <div class="game-card" onclick="Games.selectLevel(1)"><span class="g-emoji">⚽</span><span class="g-name">ملعب الحركات والمدود</span></div>
+            <div class="game-card" onclick="Games.selectLevel(2)"><span class="g-emoji">🔢</span><span class="g-name">توصيل النقاط</span></div>
+            <div class="game-card" onclick="Games.selectLevel(3)"><span class="g-emoji">🎣</span><span class="g-name">صيد الحروف المشكّلة</span></div>
+            <div class="game-card" onclick="Games.selectLevel(4)"><span class="g-emoji">🧩</span><span class="g-name">تركيب الكلمات</span></div>
+            <div class="game-card" onclick="Games.selectLevel(5)"><span class="g-emoji">🧠</span><span class="g-name">ذاكرة أحكام التجويد</span></div>
+          </div>
+        </div>
+
+        <div id="level-screen" class="screen">
+          <h1>اختر مستوى التحدي</h1>
+          <div class="level-cards">
+            <div class="level-card easy" onclick="Games.startGame(1)">
+              <div class="lc-title">🟢 سهل</div><div class="lc-time">⏱️ 60 ثانية</div><div class="lc-points">حتى 5 نقاط</div>
+            </div>
+            <div class="level-card medium" onclick="Games.startGame(2)">
+              <div class="lc-title">🟡 متوسط</div><div class="lc-time">⏱️ 45 ثانية</div><div class="lc-points">حتى 12 نقطة</div>
+            </div>
+            <div class="level-card hard" onclick="Games.startGame(3)">
+              <div class="lc-title">🔴 صعب</div><div class="lc-time">⏱️ 30 ثانية</div><div class="lc-points">حتى 25 نقطة</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="game-1-screen" class="screen">
+          <div id="pitch">
+            <div class="goal-row" id="goal-row"></div>
+            <div id="ball-wrap"><div id="ball-letter"></div></div>
+            <div id="pitch-instruction">وجّه الكرة نحو المرمى الصحيح!</div>
+          </div>
+        </div>
+
+        <div id="game-2-screen" class="screen">
+          <div id="shape-reveal-label">وصّل النقاط بالترتيب 1، 2، 3...</div>
+          <div id="dots-wrap">
+            <canvas id="dots-canvas"></canvas>
+            <div id="dots-layer"></div>
+          </div>
+        </div>
+
+        <div id="game-3-screen" class="screen">
+          <div id="target-instruction">اصطد حرف: <strong id="target-letter" style="color:var(--neon-green);font-size:2.2rem;"></strong></div>
+          <div id="game-catch-area"></div>
+        </div>
+
+        <div id="game-4-screen" class="screen">
+          <h2 style="margin-bottom:14px;color:var(--neon-yellow);">احفظ الكلمة، ثم أعد ترتيبها:</h2>
+          <div id="word-preview"></div>
+          <div class="drop-zone-container" id="drop-zone"></div>
+          <div class="letters-container" id="drag-letters"></div>
+          <button id="hint-btn" onclick="Games.useHint()">💡 تلميح (-1 نقطة)</button>
+        </div>
+
+        <div id="game-5-screen" class="screen">
+          <div class="memory-grid" id="memory-grid"></div>
+        </div>
+
+        <div id="end-screen" class="screen">
+          <h1 id="end-msg">انتهى الوقت!</h1>
+          <h2 style="font-size:1.8rem;color:var(--neon-green);margin-bottom:20px;">نقاطك: <span id="end-score"></span></h2>
+          <button class="g-btn" onclick="Games.showScreen('menu-screen')">العودة للقائمة</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MUSHAF MODE ===================== -->
+    <section id="mode-mushaf" class="app-mode">
+      <div id="mushaf-root">
+        <div class="tabs-header">
+          <button class="md-tab-btn active" onclick="Mushaf.switchTab(this,'quran-tab')">📘 المصحف التفاعلي</button>
+          <button class="md-tab-btn" onclick="Mushaf.switchTab(this,'game-tab')">🎨 تحدي التلوين الذكي</button>
+        </div>
+
+        <div id="quran-tab" class="md-tab-content active">
+          <div class="surah-bar" id="surah-bar"></div>
+          <div class="tajweed-legend">
+            <span><i class="legend-dot" style="background:var(--md-red);"></i> المدود</span>
+            <span><i class="legend-dot" style="background:var(--md-green);"></i> الإخفاء والإدغام</span>
+            <span><i class="legend-dot" style="background:var(--md-blue);"></i> القلقلة</span>
+          </div>
+          <div class="quran-container" id="quran-display"></div>
+          <p class="tts-note">🔊 النطق الصوتي آلي (تحويل نص إلى كلام من المتصفح) وليس تلاوة قارئ معتمد — مخصص للمساعدة على التعرف على مخارج الحروف فقط.</p>
+          <div class="explanation-panel" id="exp-panel">
+            <span id="exp-icon" style="font-size:1.8rem;">💡</span>
+            <div id="exp-text">اختر آية لترى شرح التجويد.</div>
+            <button id="tts-btn" onclick="Mushaf.speakActive()" title="استماع للنطق الآلي">🔊</button>
+          </div>
+        </div>
+
+        <div id="game-tab" class="md-tab-content">
+          <div class="coloring-game">
+            <div class="md-level-bar" id="md-level-bar"></div>
+            <div class="md-game-header">
+              <div id="game-question">ابحث عن: <strong style="color:var(--md-red);">حرف ممدود</strong> ولونه!</div>
+              <div style="color:var(--md-green);">النقاط: <span id="mushaf-score">0</span></div>
+            </div>
+            <div class="hollow-text-container" id="hollow-board"></div>
+            <div class="pens-palette">
+              <div class="md-pen pen-red active-pen" onclick="Mushaf.selectPen(this,'red')" title="قلم المدود">🖌️</div>
+              <div class="md-pen pen-green" onclick="Mushaf.selectPen(this,'green')" title="قلم الإخفاء والإدغام">🖌️</div>
+              <div class="md-pen pen-blue" onclick="Mushaf.selectPen(this,'blue')" title="قلم القلقلة">🖌️</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script>
+/* ========================================================
+   أدوات مشتركة: تخزين دائم + نغمات بسيطة (بدون ملفات خارجية)
+   ======================================================== */
+const Persist = {
+  async getNumber(key, fallback){
+    try{
+      const res = await window.storage.get(key, false);
+      if(res && res.value !== undefined){
+        const n = parseInt(res.value, 10);
+        return isNaN(n) ? fallback : n;
+      }
+      return fallback;
+    }catch(e){ return fallback; }
+  },
+  async setNumber(key, value){
+    try{ await window.storage.set(key, String(value), false); }
+    catch(e){ /* تجاهل بصمت: التخزين غير متاح، لكن اللعبة تستمر بالجلسة الحالية */ }
+  }
+};
+
+let audioCtx = null;
+function beep(type){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if(type === 'success'){
+      osc.frequency.value = 660; gain.gain.value = 0.12;
+      osc.start();
+      osc.frequency.linearRampToValueAtTime(990, audioCtx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      osc.stop(audioCtx.currentTime + 0.26);
+    } else {
+      osc.type = 'square'; osc.frequency.value = 180; gain.gain.value = 0.10;
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+      osc.stop(audioCtx.currentTime + 0.2);
+    }
+  }catch(e){ /* WebAudio غير متاح، نتجاهل الصوت */ }
+}
+
+function cheer(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523, 659, 784, 1046];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      const t0 = audioCtx.currentTime + i * 0.08;
+      gain.gain.setValueAtTime(0.001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.14, t0 + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.4);
+      osc.start(t0); osc.stop(t0 + 0.42);
+    });
+  }catch(e){ /* تجاهل */ }
+}
+
+const CONFETTI_COLORS = ['#ff007f','#00f3ff','#39ff14','#fefe33','#ff8c1a','#b967ff'];
+function burstConfetti(clientX, clientY, count){
+  count = count || 26;
+  for(let i = 0; i < count; i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    el.style.left = clientX + 'px';
+    el.style.top = clientY + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 70 + Math.random() * 120;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist - 40;
+    const rot = (Math.random() * 720 - 360) + 'deg';
+    document.body.appendChild(el);
+    el.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) rotate(${rot})`, opacity: 0 }
+    ], { duration: 700 + Math.random() * 400, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    setTimeout(() => el.remove(), 1150);
+  }
+}
+
+/* ========================================================
+   App: التنقل بين الأوضاع الثلاثة
+   ======================================================== */
+const App = {
+  currentMode: 'board',
+  switchMode(mode){
+    if(this.currentMode === 'games' && mode !== 'games'){ Games.leave(); }
+    document.querySelectorAll('.app-mode').forEach(el => el.classList.remove('active'));
+    document.getElementById('mode-' + mode).classList.add('active');
+    document.getElementById('appbar-back').style.display = (mode === 'board') ? 'none' : 'flex';
+    this.currentMode = mode;
+    if(mode === 'board'){ Board.resizeCanvas(); }
+  },
+  init(){
+    Board.init();
+    Games.init();
+    Mushaf.init();
+  }
+};
+
+/* ========================================================
+   Board Module: السبورة (كتابة + رسم + أدوات)
+   ======================================================== */
+const Board = (function(){
+  let container, stage, textArea, canvas, ctx;
+  let sidePanel, panelTitle, panelContent;
+  let inputMode = 'write';      // 'write' | 'draw'
+  let currentTool = 'ink';      // 'ink' | 'neon' | 'highlighter' | 'eraser'
+  let brushSize = 5;
+  let activeColor = '#1e1e1e';
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+  let isDarkBg = false;
+
+  const wheelColors = ['#e63946','#f3722c','#f9c74f','#90be6d','#2a9d8f','#43aa8b',
+                        '#277da1','#4361ee','#7209b7','#b967ff','#f72585','#000000'];
+  const tools = [
+    { id:'write', label:'كتابة', emoji:'✍️' },
+    { id:'ink', label:'حبر عربي', emoji:'🖋️' },
+    { id:'neon', label:'نيون متوهج', emoji:'🌟' },
+    { id:'highlighter', label:'هايلايتر', emoji:'🖍️' },
+    { id:'eraser', label:'ممحاة ذكية', emoji:'🧽' }
+  ];
+
+  function init(){
+    container = document.getElementById('board-container');
+    stage = document.getElementById('board-stage');
+    textArea = document.getElementById('board-text');
+    canvas = document.getElementById('board-canvas');
+    ctx = canvas.getContext('2d');
+    sidePanel = document.getElementById('side-panel');
+    panelTitle = document.getElementById('panel-title');
+    panelContent = document.getElementById('panel-content');
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    canvas.addEventListener('pointerdown', startDraw);
+    canvas.addEventListener('pointermove', draw);
+    window.addEventListener('pointerup', stopDraw);
+  }
+
+  function resizeCanvas(){
+    if(!stage) return;
+    const rect = stage.getBoundingClientRect();
+    if(rect.width === 0 || rect.height === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const prev = canvas._imgData || null;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  }
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function startDraw(e){
+    if(inputMode !== 'draw') return;
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    // نقطة واحدة (نقرة بدون سحب) ترسم أيضاً
+    applyToolStyle();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, ctx.lineWidth/2, 0, Math.PI*2);
+    ctx.fill();
+  }
+  function applyToolStyle(){
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+    ctx.globalCompositeOperation = 'source-over';
+    if(currentTool === 'ink'){
+      ctx.strokeStyle = activeColor; ctx.lineWidth = Math.max(1, brushSize * 0.45);
+    } else if(currentTool === 'neon'){
+      ctx.strokeStyle = activeColor; ctx.lineWidth = brushSize * 1.3;
+      ctx.shadowColor = activeColor; ctx.shadowBlur = 16;
+    } else if(currentTool === 'highlighter'){
+      ctx.strokeStyle = activeColor; ctx.lineWidth = brushSize * 2.6;
+      ctx.globalAlpha = 0.32; ctx.globalCompositeOperation = 'multiply';
+    } else if(currentTool === 'eraser'){
+      ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = brushSize * 3;
+    }
+  }
+  function draw(e){
+    if(!drawing || inputMode !== 'draw') return;
+    const p = getPos(e);
+    applyToolStyle();
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+  function stopDraw(){ drawing = false; }
+
+  function changeBg(type, btn){
+    container.classList.remove('bg-grid', 'bg-dark-mode');
+    isDarkBg = false;
+    if(type === 'grid'){ container.classList.add('bg-grid'); }
+    else if(type === 'dark'){ container.classList.add('bg-dark-mode'); isDarkBg = true; }
+    updatePanelTheme();
+  }
+
+  function updatePanelTheme(){
+    sidePanel.classList.toggle('dark-panel', isDarkBg);
+  }
+
+  function setInputMode(mode){
+    inputMode = mode;
+    stage.classList.remove('mode-write', 'mode-draw');
+    stage.classList.add('mode-' + mode);
+  }
+
+  function insertTashkeel(char){
+    setInputMode('write');
+    const start = textArea.selectionStart;
+    const end = textArea.selectionEnd;
+    const text = textArea.value;
+    textArea.value = text.substring(0, start) + char + text.substring(end);
+    textArea.selectionStart = textArea.selectionEnd = start + 1;
+    textArea.focus();
+  }
+
+  function openPanel(tool){
+    if(tool === 'tashkeel'){
+      panelTitle.innerText = 'التشكيل والمدود';
+      panelContent.innerHTML = `
+        <p style="margin-bottom:15px;font-size:0.9rem;">اضغط على الحركة لإضافتها في مكان وقوف المؤشر:</p>
+        <div class="tashkeel-grid">
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('َ')">َ <span>فَتْحَة</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ً')">ً <span>تنوين فتح</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ُ')">ُ <span>ضَمَّة</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٌ')">ٌ <span>تنوين ضم</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ِ')">ِ <span>كَسْرَة</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٍ')">ٍ <span>تنوين كسر</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ْ')">ْ <span>سُكُون</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ّ')">ّ <span>شَدَّة</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٰ')">ٰ <span>ألف خنجرية</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('آ')">آ <span>مدّ</span></button>
+        </div>`;
+    } else if(tool === 'pens'){
+      panelTitle.innerText = 'الأقلام والفرش';
+      panelContent.innerHTML = `
+        <p style="margin-bottom:10px;font-size:0.88rem;">اختر الأداة:</p>
+        <div class="tool-grid" id="tool-grid">${renderToolButtons()}</div>
+
+        <p style="margin:16px 0 6px;font-size:0.88rem;">سماكة الخط:</p>
+        <input type="range" id="thickness-slider" min="1" max="24" value="${brushSize}"
+               oninput="Board.setBrush(this.value)" style="width:100%;">
+
+        <p style="margin:16px 0 10px;font-size:0.88rem;">لوحة الألوان:</p>
+        <div class="color-wheel" id="color-wheel">${renderColorWheel()}</div>
+
+        <p style="font-size:0.8rem;color:gray;margin-top:14px;">يمكنك الكتابة والرسم معاً على نفس السبورة.</p>`;
+    } else if(tool === 'colors'){
+      openPanel('pens');
+      return;
+    }
+    sidePanel.classList.add('active');
+  }
+
+  function renderToolButtons(){
+    return tools.map(t => {
+      const active = (t.id === 'write' ? inputMode === 'write' : (inputMode === 'draw' && currentTool === t.id));
+      return `<button class="tool-chip ${active?'selected':''}" onclick="Board.selectTool('${t.id}')">
+                <span class="tc-emoji">${t.emoji}</span>${t.label}
+              </button>`;
+    }).join('');
+  }
+
+  function renderColorWheel(){
+    const n = wheelColors.length;
+    const radius = 78;
+    return wheelColors.map((c, i) => {
+      const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+      const x = 90 + radius * Math.cos(angle) - 18;
+      const y = 90 + radius * Math.sin(angle) - 18;
+      const sel = (c === activeColor) ? 'selected' : '';
+      return `<div class="wheel-swatch ${sel}" style="left:${x}px;top:${y}px;background:${c};" onclick="Board.setColor('${c}')"></div>`;
+    }).join('') + `<div class="wheel-center" style="background:${activeColor};"></div>`;
+  }
+
+  function selectTool(id){
+    if(id === 'write'){ setInputMode('write'); }
+    else { setInputMode('draw'); currentTool = id; }
+    const grid = document.getElementById('tool-grid');
+    if(grid) grid.innerHTML = renderToolButtons();
+  }
+
+  function setBrush(size){
+    brushSize = parseInt(size, 10);
+  }
+
+  function setColor(color){
+    activeColor = color;
+    textArea.style.color = color;
+    const wheel = document.getElementById('color-wheel');
+    if(wheel) wheel.innerHTML = renderColorWheel();
+  }
+
+  function closePanel(){ sidePanel.classList.remove('active'); }
+
+  function clearBoard(){
+    if(confirm('هل أنت متأكد من مسح السبورة بالكامل؟')){
+      textArea.value = '';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  function createFloatingWindow(title, contentElement){
+    const win = document.createElement('div');
+    win.className = 'floating-window';
+    win.style.width = '380px'; win.style.height = '280px';
+    const header = document.createElement('div');
+    header.className = 'floating-header';
+    header.innerHTML = `<span>${title}</span>`;
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-floating';
+    closeBtn.innerHTML = '✕';
+    closeBtn.onclick = () => win.remove();
+    header.appendChild(closeBtn);
+    const content = document.createElement('div');
+    content.className = 'floating-content';
+    content.appendChild(contentElement);
+    win.appendChild(header); win.appendChild(content);
+    container.appendChild(win);
+    makeDraggable(win, header);
+  }
+
+  function makeDraggable(element, dragHandle){
+    let pos1=0,pos2=0,pos3=0,pos4=0;
+    dragHandle.onmousedown = dragMouseDown;
+    function dragMouseDown(e){
+      if(e.target.closest('.close-floating')) return;
+      e.preventDefault();
+      pos3 = e.clientX; pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+      document.querySelectorAll('.floating-window').forEach(el => el.style.zIndex = '150');
+      element.style.zIndex = '151';
+    }
+    function elementDrag(e){
+      e.preventDefault();
+      pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+      pos3 = e.clientX; pos4 = e.clientY;
+      element.style.top = (element.offsetTop - pos2) + 'px';
+      element.style.left = (element.offsetLeft - pos1) + 'px';
+    }
+    function closeDragElement(){ document.onmouseup = null; document.onmousemove = null; }
+  }
+
+  function handleFileUpload(event){
+    const file = event.target.files[0];
+    if(!file) return;
+    const fileURL = URL.createObjectURL(file);
+    let contentElement;
+    if(file.type.startsWith('image/')){
+      contentElement = document.createElement('img');
+      contentElement.src = fileURL;
+    } else if(file.type === 'application/pdf'){
+      contentElement = document.createElement('iframe');
+      contentElement.src = fileURL;
+    } else {
+      alert('صيغة الملف غير مدعومة! الرجاء اختيار صورة أو ملف PDF.');
+      return;
+    }
+    createFloatingWindow(file.name, contentElement);
+    event.target.value = '';
+  }
+
+  async function startScreenShare(){
+    try{
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video:{ cursor:'always' }, audio:false });
+      const videoElement = document.createElement('video');
+      videoElement.srcObject = stream; videoElement.autoplay = true; videoElement.playsInline = true;
+      createFloatingWindow('مشاركة الشاشة', videoElement);
+      stream.getVideoTracks()[0].onended = () => {
+        const win = videoElement.closest('.floating-window');
+        if(win) win.remove();
+      };
+    }catch(err){
+      console.log('تم إلغاء أو رفض مشاركة الشاشة.');
+    }
+  }
+
+  return {
+    init, changeBg, setInputMode, insertTashkeel, openPanel, selectTool, setBrush, setColor,
+    closePanel, clearBoard, handleFileUpload, startScreenShare, resizeCanvas
+  };
+})();
+
+/* ========================================================
+   Games Module: بوابة ألعاب الذكاء
+   ======================================================== */
+const Games = (function(){
+  let currentScore = 0;
+  let timeLeft = 0;
+  let timerInterval = null;
+  let activeGame = 0;
+  let activeLevel = 1;
+  let highScore = 0;
+  let gameLoops = [];
+
+  async function init(){
+    highScore = await Persist.getNumber('fusha-games-highscore', 0);
+    document.getElementById('ui-highscore').innerText = highScore;
+  }
+
+  function leave(){
+    clearInterval(timerInterval);
+    clearGameIntervals();
+    document.querySelectorAll('#game-portal .screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('menu-screen').classList.add('active');
+  }
+
+  function showScreen(screenId){
+    document.querySelectorAll('#game-portal .screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+    clearInterval(timerInterval);
+    clearGameIntervals();
+  }
+
+  function selectLevel(gameId){ activeGame = gameId; showScreen('level-screen'); }
+
+  function startGame(level){
+    activeLevel = level;
+    currentScore = 0;
+    updateScoreUI();
+    if(level === 1) timeLeft = 60;
+    else if(level === 2) timeLeft = 45;
+    else timeLeft = 30;
+    startTimer();
+    showScreen(`game-${activeGame}-screen`);
+    if(activeGame === 1) initGame1();
+    if(activeGame === 2) initGame2();
+    if(activeGame === 3) initGame3();
+    if(activeGame === 4) initGame4();
+    if(activeGame === 5) initGame5();
+  }
+
+  function startTimer(){
+    updateTimerUI();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerUI();
+      if(timeLeft <= 0) endGame();
+    }, 1000);
+  }
+
+  function updateTimerUI(){
+    let m = Math.floor(timeLeft/60).toString().padStart(2,'0');
+    let s = (timeLeft%60).toString().padStart(2,'0');
+    const el = document.getElementById('ui-timer');
+    el.innerText = `${m}:${s}`;
+    el.classList.toggle('timer-low', timeLeft <= 10 && timeLeft > 0);
+  }
+  function updateScoreUI(){ document.getElementById('ui-score').innerText = currentScore; }
+  function addScore(points){ currentScore = Math.max(0, currentScore + points); updateScoreUI(); }
+
+  async function endGame(){
+    clearInterval(timerInterval);
+    clearGameIntervals();
+    if(currentScore > highScore){
+      highScore = currentScore;
+      await Persist.setNumber('fusha-games-highscore', highScore);
+      document.getElementById('ui-highscore').innerText = highScore;
+      document.getElementById('end-msg').innerText = 'رقم قياسي جديد! 🎉';
+      cheer();
+    } else {
+      document.getElementById('end-msg').innerText = 'انتهى الوقت!';
+    }
+    document.getElementById('end-score').innerText = currentScore;
+    showScreen('end-screen');
+  }
+
+  function clearGameIntervals(){
+    gameLoops.forEach(clearInterval);
+    gameLoops = [];
+    const catchArea = document.getElementById('game-catch-area');
+    if(catchArea) catchArea.innerHTML = '';
+  }
+
+  function celebrateAt(el){
+    const r = el.getBoundingClientRect();
+    burstConfetti(r.left + r.width/2, r.top + r.height/2);
+  }
+
+  /* ===================================================
+     اللعبة 1: ملعب الحركات والمدود ⚽
+     =================================================== */
+  const g1Pool = {
+    1: { zones:[{id:'fatha',label:'فتحة',sym:'َ'},{id:'damma',label:'ضمة',sym:'ُ'},{id:'kasra',label:'كسرة',sym:'ِ'}],
+         items:[
+           {t:'بَ',z:'fatha'},{t:'بُ',z:'damma'},{t:'بِ',z:'kasra'},
+           {t:'تَ',z:'fatha'},{t:'تُ',z:'damma'},{t:'تِ',z:'kasra'},
+           {t:'جَ',z:'fatha'},{t:'جُ',z:'damma'},{t:'جِ',z:'kasra'},
+           {t:'سَ',z:'fatha'},{t:'سُ',z:'damma'},{t:'سِ',z:'kasra'}
+         ]},
+    2: { zones:[{id:'fatha',label:'فتحة',sym:'َ'},{id:'damma',label:'ضمة',sym:'ُ'},{id:'kasra',label:'كسرة',sym:'ِ'},
+                {id:'maa',label:'مد بالألف',sym:'ـَا'},{id:'mwaw',label:'مد بالواو',sym:'ـُو'},{id:'myaa',label:'مد بالياء',sym:'ـِي'}],
+         items:[
+           {t:'بَ',z:'fatha'},{t:'بُ',z:'damma'},{t:'بِ',z:'kasra'},
+           {t:'بَا',z:'maa'},{t:'بُو',z:'mwaw'},{t:'بِي',z:'myaa'},
+           {t:'تَا',z:'maa'},{t:'تُو',z:'mwaw'},{t:'تِي',z:'myaa'},
+           {t:'جَا',z:'maa'},{t:'رُو',z:'mwaw'},{t:'سِي',z:'myaa'}
+         ]},
+    3: { zones:[{id:'maa',label:'مد بالألف',sym:'ـَا'},{id:'mwaw',label:'مد بالواو',sym:'ـُو'},{id:'myaa',label:'مد بالياء',sym:'ـِي'},
+                {id:'tfath',label:'تنوين فتح',sym:'ـً'},{id:'tdamm',label:'تنوين ضم',sym:'ـٌ'},{id:'tkasr',label:'تنوين كسر',sym:'ـٍ'}],
+         items:[
+           {t:'بَا',z:'maa'},{t:'بُو',z:'mwaw'},{t:'بِي',z:'myaa'},
+           {t:'كِتَابًا',z:'tfath'},{t:'قَلَمٌ',z:'tdamm'},{t:'كِتَابٍ',z:'tkasr'},
+           {t:'سَمَاءً',z:'tfath'},{t:'مَاءٍ',z:'tkasr'},{t:'بَيْتٌ',z:'tdamm'},
+           {t:'هُدًى',z:'tfath'},{t:'نُورٌ',z:'tdamm'},{t:'عِلْمٍ',z:'tkasr'}
+         ]}
+  };
+  let g1Current = null;
+
+  function initGame1(){
+    const cfg = g1Pool[activeLevel];
+    const row = document.getElementById('goal-row');
+    row.innerHTML = cfg.zones.map(z =>
+      `<div class="goal-zone" data-zone="${z.id}" onclick="Games.kickBall('${z.id}', this)"><span class="gz-sym">${z.sym}</span>${z.label}</div>`
+    ).join('');
+    nextBall();
+  }
+  function nextBall(){
+    const cfg = g1Pool[activeLevel];
+    g1Current = cfg.items[Math.floor(Math.random() * cfg.items.length)];
+    const ballWrap = document.getElementById('ball-wrap');
+    ballWrap.style.left = '50%'; ballWrap.style.bottom = '60px'; ballWrap.classList.remove('flying','wrong');
+    document.getElementById('ball-letter').innerText = g1Current.t;
+  }
+  function kickBall(zoneId, zoneEl){
+    const ballWrap = document.getElementById('ball-wrap');
+    if(zoneId === g1Current.z){
+      const pitch = document.getElementById('pitch');
+      const pr = pitch.getBoundingClientRect();
+      const zr = zoneEl.getBoundingClientRect();
+      const targetLeft = zr.left - pr.left + zr.width/2;
+      ballWrap.classList.add('flying');
+      ballWrap.style.left = targetLeft + 'px';
+      ballWrap.style.bottom = (pr.bottom - zr.bottom + zr.height/2) + 'px';
+      addScore(activeLevel === 1 ? 1 : (activeLevel === 2 ? 2 : 3));
+      cheer();
+      celebrateAt(zoneEl);
+      setTimeout(nextBall, 550);
+    } else {
+      ballWrap.classList.add('wrong');
+      beep('error');
+      timeLeft = Math.max(0, timeLeft - 1);
+      updateTimerUI();
+      setTimeout(() => ballWrap.classList.remove('wrong'), 350);
+    }
+  }
+
+  /* ===================================================
+     اللعبة 2: توصيل النقاط 🔢
+     =================================================== */
+  const g2Shapes = [
+    { name:'بيت', emoji:'🏠', pts:[[0.30,0.85],[0.30,0.50],[0.50,0.28],[0.70,0.50],[0.70,0.85]] },
+    { name:'كتاب', emoji:'📖', pts:[[0.28,0.25],[0.72,0.25],[0.72,0.80],[0.28,0.80]] },
+    { name:'نجمة', emoji:'⭐', pts:(function(){
+        const p=[]; const cx=0.5, cy=0.55, rOut=0.34, rIn=0.14;
+        for(let i=0;i<10;i++){ const ang=(-90+i*36)*Math.PI/180; const r=i%2===0?rOut:rIn; p.push([cx+r*Math.cos(ang), cy+r*Math.sin(ang)]); }
+        return p; })() },
+    { name:'هلال', emoji:'🌙', pts:[[0.62,0.22],[0.48,0.28],[0.38,0.40],[0.34,0.55],[0.38,0.70],[0.48,0.82],[0.62,0.88],[0.52,0.75],[0.47,0.55],[0.52,0.35]] },
+    { name:'قلب', emoji:'❤️', pts:[[0.5,0.82],[0.32,0.62],[0.24,0.44],[0.30,0.28],[0.42,0.26],[0.5,0.36],[0.58,0.26],[0.70,0.28],[0.76,0.44],[0.68,0.62]] }
+  ];
+  function g2PoolForLevel(){
+    if(activeLevel === 1) return g2Shapes.filter(s => s.pts.length <= 5);
+    if(activeLevel === 2) return g2Shapes.filter(s => s.pts.length > 5 && s.pts.length <= 10);
+    return g2Shapes.filter(s => s.pts.length > 8);
+  }
+  let g2Shape = null, g2NextIndex = 0, g2Ctx = null;
+
+  function initGame2(){
+    const canvas = document.getElementById('dots-canvas');
+    const wrap = document.getElementById('dots-wrap');
+    const rect = wrap.getBoundingClientRect();
+    canvas.width = rect.width; canvas.height = rect.height;
+    g2Ctx = canvas.getContext('2d');
+    loadDotsRound();
+  }
+  function loadDotsRound(){
+    const pool = g2PoolForLevel();
+    g2Shape = pool[Math.floor(Math.random() * pool.length)];
+    g2NextIndex = 0;
+    g2Ctx.clearRect(0,0,g2Ctx.canvas.width,g2Ctx.canvas.height);
+    document.getElementById('shape-reveal-label').innerText = 'وصّل النقاط بالترتيب 1، 2، 3...';
+    const layer = document.getElementById('dots-layer');
+    layer.innerHTML = '';
+    const w = g2Ctx.canvas.width, h = g2Ctx.canvas.height;
+    g2Shape.pts.forEach((p, idx) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot-point';
+      dot.innerText = idx + 1;
+      dot.style.left = (p[0]*w) + 'px';
+      dot.style.top = (p[1]*h) + 'px';
+      dot.onclick = () => clickDot(idx, dot);
+      layer.appendChild(dot);
+    });
+  }
+  function clickDot(idx, dotEl){
+    if(idx !== g2NextIndex){
+      dotEl.classList.add('wrong-dot');
+      beep('error');
+      setTimeout(() => dotEl.classList.remove('wrong-dot'), 300);
+      return;
+    }
+    if(idx > 0){
+      const w = g2Ctx.canvas.width, h = g2Ctx.canvas.height;
+      const prev = g2Shape.pts[idx-1], cur = g2Shape.pts[idx];
+      g2Ctx.strokeStyle = '#fefe33'; g2Ctx.lineWidth = 4; g2Ctx.lineCap = 'round';
+      g2Ctx.beginPath();
+      g2Ctx.moveTo(prev[0]*w, prev[1]*h);
+      g2Ctx.lineTo(cur[0]*w, cur[1]*h);
+      g2Ctx.stroke();
+    }
+    dotEl.classList.add('done');
+    g2NextIndex++;
+    if(g2NextIndex === g2Shape.pts.length){
+      const w = g2Ctx.canvas.width, h = g2Ctx.canvas.height;
+      const first = g2Shape.pts[0], last = g2Shape.pts[g2Shape.pts.length-1];
+      g2Ctx.beginPath(); g2Ctx.moveTo(last[0]*w, last[1]*h); g2Ctx.lineTo(first[0]*w, first[1]*h); g2Ctx.stroke();
+      g2Ctx.beginPath();
+      g2Shape.pts.forEach((p,i) => { if(i===0) g2Ctx.moveTo(p[0]*w,p[1]*h); else g2Ctx.lineTo(p[0]*w,p[1]*h); });
+      g2Ctx.closePath();
+      g2Ctx.fillStyle = 'rgba(57,255,20,0.35)';
+      g2Ctx.fill();
+      document.getElementById('shape-reveal-label').innerText = `${g2Shape.emoji} ${g2Shape.name}! أحسنت`;
+      addScore(activeLevel === 1 ? 3 : (activeLevel === 2 ? 5 : 8));
+      cheer();
+      celebrateAt(document.getElementById('dots-wrap'));
+      setTimeout(loadDotsRound, 1400);
+    } else {
+      beep('success');
+    }
+  }
+
+  /* ===================================================
+     اللعبة 3: صيد الحروف المشكّلة 🎣
+     =================================================== */
+  const g3Pool = {
+    1: ['بَ','بُ','بِ','تَ','تُ','تِ','جَ','جُ','جِ'],
+    2: ['بَا','بُو','بِي','تَا','تُو','تِي','سَا','رُو'],
+    3: ['عَ','أَ','عُ','أُ','حِ','هِ','سَ','صَ','تُ','طُ','كَّ','بٌّ']
+  };
+  let currentTargetChar = '';
+  let bubbleLoop = null;
+
+  function initGame3(){
+    setNewTarget();
+    let spawnRate = activeLevel === 1 ? 1400 : (activeLevel === 2 ? 950 : 600);
+    gameLoops.push(setInterval(spawnLetter, spawnRate));
+    bubbleLoop = setInterval(spawnBubble, 500);
+    gameLoops.push(bubbleLoop);
+  }
+  function setNewTarget(){
+    const pool = g3Pool[activeLevel];
+    currentTargetChar = pool[Math.floor(Math.random()*pool.length)];
+    document.getElementById('target-letter').innerText = currentTargetChar;
+  }
+  function spawnBubble(){
+    const area = document.getElementById('game-catch-area');
+    if(!area) return;
+    const b = document.createElement('div');
+    b.className = 'water-bubble';
+    b.style.left = (Math.random()*100) + '%';
+    b.style.animationDuration = (2 + Math.random()*2) + 's';
+    area.appendChild(b);
+    setTimeout(() => b.remove(), 4200);
+  }
+  function spawnLetter(){
+    const area = document.getElementById('game-catch-area');
+    if(!area) return;
+    const pool = g3Pool[activeLevel];
+    const letterEl = document.createElement('div');
+    letterEl.className = 'floating-letter';
+    let charToSpawn = Math.random() > 0.65 ? currentTargetChar : pool[Math.floor(Math.random()*pool.length)];
+    letterEl.innerText = charToSpawn;
+    let startX = Math.random() * Math.max(0, area.clientWidth - 70);
+    letterEl.style.left = startX + 'px';
+    letterEl.style.bottom = '-70px';
+    area.appendChild(letterEl);
+    let pos = -70;
+    let speed = activeLevel === 1 ? 1.6 : (activeLevel === 2 ? 3.2 : 5.5);
+    let moveInterval = setInterval(() => {
+      pos += speed;
+      letterEl.style.bottom = pos + 'px';
+      if(pos > area.clientHeight + 70){ clearInterval(moveInterval); letterEl.remove(); }
+    }, 20);
+    gameLoops.push(moveInterval);
+    letterEl.onpointerdown = () => {
+      if(letterEl.innerText === currentTargetChar){
+        addScore(activeLevel === 1 ? 1 : (activeLevel === 2 ? 2 : 3));
+        beep('success');
+        letterEl.style.background = 'rgba(57,255,20,0.5)';
+        letterEl.style.transform = 'scale(1.6)';
+        celebrateAt(letterEl);
+        setTimeout(() => letterEl.remove(), 180);
+        setNewTarget();
+      } else {
+        timeLeft = Math.max(0, timeLeft - 2);
+        updateTimerUI(); beep('error');
+        letterEl.style.background = 'rgba(255,0,50,0.5)';
+        letterEl.style.transform = 'rotate(20deg)';
+      }
+    };
+  }
+
+  /* ===================================================
+     اللعبة 5: ذاكرة أحكام التجويد 🧠
+     =================================================== */
+  const tajweedData = [
+    { id:1, text:'مِنْ بَعْدِ', match:'إقلاب' },
+    { id:2, text:'أَنْعَمْتَ', match:'إظهار' },
+    { id:3, text:'مِنْ مَسَدٍ', match:'إدغام بغنة' },
+    { id:4, text:'كُنْتُمْ', match:'إخفاء' },
+    { id:5, text:'مِنْ وَاقٍ', match:'إدغام بغنة' },
+    { id:6, text:'أَنْبَتْنَا', match:'إقلاب' }
+  ];
+  let hasFlippedCard=false, lockBoard=false, firstCard=null, secondCard=null;
+
+  function initGame5(){
+    const grid = document.getElementById('memory-grid');
+    grid.innerHTML = '';
+    let cardsArray = [];
+    let pairsCount = activeLevel === 1 ? 2 : (activeLevel === 2 ? 3 : 4);
+    const shuffled = [...tajweedData].sort(() => 0.5 - Math.random()).slice(0, pairsCount);
+    shuffled.forEach(d => {
+      cardsArray.push({ value:d.text, matchId:d.id });
+      cardsArray.push({ value:d.match, matchId:d.id });
+    });
+    cardsArray.sort(() => 0.5 - Math.random());
+    cardsArray.forEach(item => {
+      const card = document.createElement('div');
+      card.classList.add('memory-card');
+      card.dataset.matchId = item.matchId;
+      card.innerHTML = `<div class="card-face card-front">${item.value}</div><div class="card-face card-back">❓</div>`;
+      card.addEventListener('click', flipCard);
+      grid.appendChild(card);
+    });
+    resetMatchState();
+  }
+  function flipCard(){
+    if(lockBoard) return;
+    if(this === firstCard) return;
+    this.classList.add('flipped');
+    if(!hasFlippedCard){ hasFlippedCard = true; firstCard = this; return; }
+    secondCard = this;
+    checkForMatch();
+  }
+  function checkForMatch(){
+    let isMatch = firstCard.dataset.matchId === secondCard.dataset.matchId;
+    if(isMatch){
+      addScore(activeLevel === 1 ? 3 : (activeLevel === 2 ? 4 : 6));
+      cheer();
+      celebrateAt(secondCard);
+      disableCards();
+      if(document.querySelectorAll('#memory-grid .memory-card:not(.flipped)').length === 0){
+        setTimeout(initGame5, 1000);
+      }
+    } else { beep('error'); unflipCards(); }
+  }
+  function disableCards(){
+    firstCard.removeEventListener('click', flipCard);
+    secondCard.removeEventListener('click', flipCard);
+    firstCard.querySelector('.card-front').style.borderColor = 'var(--neon-green)';
+    secondCard.querySelector('.card-front').style.borderColor = 'var(--neon-green)';
+    resetMatchState();
+  }
+  function unflipCards(){
+    lockBoard = true;
+    setTimeout(() => {
+      firstCard.classList.remove('flipped');
+      secondCard.classList.remove('flipped');
+      resetMatchState();
+    }, 1000);
+  }
+  function resetMatchState(){ hasFlippedCard=false; lockBoard=false; firstCard=null; secondCard=null; }
+
+  /* ===================================================
+     اللعبة 4: تفكيك وتركيب الكلمات 🧩
+     =================================================== */
+  const wordsByLevel = {
+    1: ['بَابٌ','قَلَمٌ','كِتَابٌ'],
+    2: ['مَدْرَسَة','مُعَلِّمٌ','قُرْآنٌ'],
+    3: ['فَسَيَكْفِيكَهُمُ','أَنُلْزِمُكُمُوهَا']
+  };
+  let currentWordLetters = [];
+
+  function initGame4(){
+    const dropZone = document.getElementById('drop-zone');
+    const dragArea = document.getElementById('drag-letters');
+    const preview = document.getElementById('word-preview');
+    dropZone.innerHTML = ''; dragArea.innerHTML = ''; preview.style.visibility='visible';
+    let wordList = wordsByLevel[activeLevel];
+    let word = wordList[Math.floor(Math.random()*wordList.length)];
+    currentWordLetters = Array.from(word);
+    preview.innerText = word;
+    dropZone.style.opacity = '0.15'; dragArea.style.opacity = '0.15';
+
+    setTimeout(() => {
+      preview.style.visibility = 'hidden';
+      dropZone.style.opacity = '1'; dragArea.style.opacity = '1';
+      buildDropAndDrag();
+    }, 3000);
+  }
+  function buildDropAndDrag(){
+    const dropZone = document.getElementById('drop-zone');
+    const dragArea = document.getElementById('drag-letters');
+    dropZone.innerHTML = ''; dragArea.innerHTML = '';
+    currentWordLetters.forEach((letter, index) => {
+      const box = document.createElement('div');
+      box.className = 'drop-box';
+      box.dataset.index = index; box.dataset.expected = letter;
+      box.addEventListener('dragover', e => e.preventDefault());
+      box.addEventListener('drop', handleDrop);
+      dropZone.appendChild(box);
+    });
+    let shuffledLetters = [...currentWordLetters].sort(() => 0.5 - Math.random());
+    shuffledLetters.forEach((letter, index) => {
+      const dragEl = document.createElement('div');
+      dragEl.className = 'draggable-letter';
+      dragEl.draggable = true;
+      dragEl.innerText = letter;
+      dragEl.id = 'drag-' + index;
+      dragEl.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', dragEl.id);
+        e.dataTransfer.setData('letter', letter);
+      });
+      dragArea.appendChild(dragEl);
+    });
+  }
+  function handleDrop(e){
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    const draggedLetter = e.dataTransfer.getData('letter');
+    const draggedElement = document.getElementById(draggedId);
+    if(!draggedElement) return;
+    if(draggedLetter === this.dataset.expected && !this.hasChildNodes()){
+      this.appendChild(draggedElement);
+      draggedElement.draggable = false;
+      draggedElement.style.boxShadow = 'none';
+      draggedElement.style.background = 'transparent';
+      draggedElement.style.color = 'var(--neon-blue)';
+      addScore(activeLevel === 1 ? 2 : (activeLevel === 2 ? 3 : 4));
+      beep('success');
+      if(document.getElementById('drag-letters').children.length === 0){
+        addScore(activeLevel === 1 ? 5 : (activeLevel === 2 ? 12 : 25));
+        cheer();
+        celebrateAt(dropZoneEl());
+        setTimeout(initGame4, 1200);
+      }
+    } else {
+      timeLeft = Math.max(0, timeLeft - 1);
+      updateTimerUI(); beep('error');
+    }
+  }
+  function dropZoneEl(){ return document.getElementById('drop-zone'); }
+  function useHint(){
+    const emptyBox = Array.from(document.querySelectorAll('#drop-zone .drop-box')).find(b => !b.hasChildNodes());
+    if(!emptyBox) return;
+    const expected = emptyBox.dataset.expected;
+    const dragEl = Array.from(document.querySelectorAll('#drag-letters .draggable-letter')).find(d => d.innerText === expected);
+    if(dragEl){
+      emptyBox.appendChild(dragEl);
+      dragEl.draggable = false;
+      dragEl.style.boxShadow = 'none'; dragEl.style.background = 'transparent'; dragEl.style.color = 'var(--neon-orange)';
+      addScore(-1);
+      beep('error');
+      if(document.getElementById('drag-letters').children.length === 0){
+        setTimeout(initGame4, 1200);
+      }
+    }
+  }
+
+  return { init, leave, showScreen, selectLevel, startGame, kickBall, useHint };
+})();
+
+/* ========================================================
+   Mushaf Module: مصحف التجويد التفاعلي
+   ======================================================== */
+const Mushaf = (function(){
+  let currentScore = 0;
+  let currentSelectedPen = 'red';
+  let activeSurahId = 'falaq';
+  let currentPlainText = '';
+  let mdLevel = 1;
+
+  const SURAHS = [
+    { id:'falaq', name:'الفلق', ayat:[
+      { html:'قُلْ أَعُوذُ بِرَبِّ الْفَلَ<span class="rule-qalqalah">قِ</span>', plain:'قل أعوذ برب الفلق',
+        exp:'حرف القاف في نهاية الآية من حروف القلقلة (قطب جد) — نهزّ الصوت بها قليلاً عند الوقف.', color:'blue' },
+      { html:'مِ<span class="rule-ikhfa">نْ شَ</span>رِّ مَ<span class="rule-madd">ا</span> خَلَ<span class="rule-qalqalah">قَ</span>', plain:'من شر ما خلق',
+        exp:'النون الساكنة تُخفى قبل الشين (إخفاء)، والألف في «ما» تُمد حركتين، والقاف في النهاية قلقلة.', color:'green' },
+      { html:'وَمِ<span class="rule-ikhfa">نْ شَ</span>رِّ غَ<span class="rule-madd">ا</span>سِقٍ إِذَ<span class="rule-madd">ا</span> وَقَ<span class="rule-qalqalah">بَ</span>', plain:'ومن شر غاسق إذا وقب',
+        exp:'إخفاء في «شَرِّ»، ومدّان في «غاسق» و«إذا»، وقلقلة في الباء عند الوقف.', color:'red' },
+      { html:'وَمِ<span class="rule-ikhfa">نْ شَ</span>رِّ النَّفَّ<span class="rule-madd">ا</span>ثَ<span class="rule-madd">ا</span>تِ فِ<span class="rule-madd">ي</span> الْعُقَ<span class="rule-qalqalah">د</span>ِ', plain:'ومن شر النفاثات في العقد',
+        exp:'إخفاء في «شَرِّ»، ثلاثة مدود متتالية في هذه الآية، وقلقلة في الدال.', color:'red' },
+      { html:'وَمِ<span class="rule-ikhfa">نْ شَ</span>رِّ حَ<span class="rule-madd">ا</span>سِدٍ إِذَ<span class="rule-madd">ا</span> حَسَ<span class="rule-qalqalah">د</span>َ', plain:'ومن شر حاسد إذا حسد',
+        exp:'إخفاء في «شَرِّ»، مدّان في «حاسد» و«إذا»، وقلقلة في الدال عند الوقف.', color:'green' }
+    ]},
+    { id:'ikhlas', name:'الإخلاص', ayat:[
+      { html:'قُلْ هُوَ اللَّهُ أَحَ<span class="rule-qalqalah">د</span>ٌ', plain:'قل هو الله أحد',
+        exp:'الدال في نهاية الآية من حروف القلقلة، نهزّ الصوت بها قليلاً عند الوقف.', color:'blue' },
+      { html:'اللَّهُ الصَّمَ<span class="rule-qalqalah">د</span>ُ', plain:'الله الصمد',
+        exp:'الدال هنا أيضاً حرف قلقلة عند الوقف عليها.', color:'blue' },
+      { html:'لَمْ يَلِ<span class="rule-qalqalah">د</span>ْ وَلَمْ يُ<span class="rule-madd">و</span>لَ<span class="rule-qalqalah">د</span>ْ', plain:'لم يلد ولم يولد',
+        exp:'الدال في «يلد» قلقلة واضحة بسكونها، والواو في «يولد» مدّ، ثم قلقلة أخرى في آخر الآية.', color:'blue' },
+      { html:'وَلَمْ يَكُ<span class="rule-ikhfa">نْ لَ</span>هُ كُفُوًا أَحَ<span class="rule-qalqalah">د</span>ٌ', plain:'ولم يكن له كفوا أحد',
+        exp:'إدغام النون الساكنة في اللام بلا غنة، وقلقلة في الدال بنهاية الآية.', color:'green' }
+    ]},
+    { id:'nasr', name:'النصر', ayat:[
+      { html:'إِذَ<span class="rule-madd">ا</span> جَ<span class="rule-madd">ا</span>ءَ نَصْرُ اللَّهِ وَالْفَتْحُ', plain:'إذا جاء نصر الله والفتح',
+        exp:'مدّان في هذه الآية: في «إذا» و«جاء».', color:'red' },
+      { html:'وَرَأَ<span class="rule-madd">يْ</span>تَ النَّ<span class="rule-madd">ا</span>سَ يَ<span class="rule-qalqalah">دْ</span>خُلُ<span class="rule-madd">و</span>نَ فِ<span class="rule-madd">ي</span> دِ<span class="rule-madd">ي</span>نِ اللَّهِ أَفْوَ<span class="rule-madd">ا</span>جًا', plain:'ورأيت الناس يدخلون في دين الله أفواجا',
+        exp:'آية غنية بالمدود، وفيها قلقلة في الدال الساكنة بكلمة «يدخلون».', color:'red' },
+      { html:'فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُ إِنَّهُ كَ<span class="rule-madd">ا</span>نَ تَوَّ<span class="rule-madd">ا</span>بًا', plain:'فسبح بحمد ربك واستغفره إنه كان توابا',
+        exp:'مدّان في نهاية الآية: في «كان» و«تواباً».', color:'red' }
+    ]},
+    { id:'kawthar', name:'الكوثر', ayat:[
+      { html:'إِنَّ<span class="rule-madd">ا</span> أَعْطَ<span class="rule-madd">يْ</span>نَ<span class="rule-madd">ا</span>كَ الْكَ<span class="rule-madd">وْ</span>ثَرَ', plain:'إنا أعطيناك الكوثر',
+        exp:'آية مليئة بالمدود — أربعة مواضع مدّ متتالية!', color:'red' },
+      { html:'فَصَلِّ لِرَبِّكَ وَانْحَرْ', plain:'فصل لربك وانحر',
+        exp:'لا توجد ألوان بارزة هنا — النون الساكنة قبل الحاء تُظهر بوضوح تام (إظهار حلقي).', color:null },
+      { html:'إِنَّ شَ<span class="rule-madd">ا</span>نِئَكَ هُوَ الْأَ<span class="rule-qalqalah">ب</span>ْتَرُ', plain:'إن شانئك هو الأبتر',
+        exp:'مدّ في «شانئك»، وقلقلة في الباء الساكنة بكلمة «الأبتر».', color:'blue' }
+    ]},
+    { id:'nas', name:'الناس', ayat:[
+      { html:'قُلْ أَعُ<span class="rule-madd">و</span>ذُ بِرَبِّ النَّ<span class="rule-madd">ا</span>سِ', plain:'قل أعوذ برب الناس',
+        exp:'مدّان: الواو في «أعوذ» والألف في «الناس».', color:'red' },
+      { html:'مَلِكِ النَّ<span class="rule-madd">ا</span>سِ', plain:'ملك الناس',
+        exp:'مدّ الألف في «الناس».', color:'red' },
+      { html:'إِلَ<span class="rule-madd">ـٰ</span>هِ النَّ<span class="rule-madd">ا</span>سِ', plain:'إله الناس',
+        exp:'الألف الخنجرية الصغيرة فوق اللام تُقرأ مدّاً، ومدّ آخر في «الناس».', color:'red' },
+      { html:'مِ<span class="rule-ikhfa">نْ شَ</span>رِّ الْوَسْوَ<span class="rule-madd">ا</span>سِ الْخَنَّ<span class="rule-madd">ا</span>سِ', plain:'من شر الوسواس الخناس',
+        exp:'إخفاء النون قبل الشين، ومدّان في «الوسواس» و«الخناس».', color:'green' },
+      { html:'الَّذِ<span class="rule-madd">ي</span> يُوَسْوِسُ فِ<span class="rule-madd">ي</span> صُدُ<span class="rule-madd">و</span>رِ النَّ<span class="rule-madd">ا</span>سِ', plain:'الذي يوسوس في صدور الناس',
+        exp:'آية بها أربعة مدود متتالية — لاحظ كل ياء وواو وألف ممدودة.', color:'red' },
+      { html:'مِنَ الْجِنَّةِ وَالنَّ<span class="rule-madd">ا</span>سِ', plain:'من الجنة والناس',
+        exp:'مدّ الألف الأخير في «الناس» يختم السورة.', color:'red' }
+    ]}
+  ];
+
+  const COLORING_ROUNDS = [
+    { targetRule:'red', question:'حرف ممدود', items:[{char:'كَ',rule:'none'},{char:'ا',rule:'red'},{char:'نَ',rule:'none'}] },
+    { targetRule:'red', question:'حرف ممدود', items:[{char:'دِ',rule:'none'},{char:'ي',rule:'red'},{char:'نِ',rule:'none'}] },
+    { targetRule:'green', question:'حكم إخفاء', items:[{char:'مِ',rule:'none'},{char:'نْ',rule:'green'},{char:' ',rule:'none'},{char:'شَ',rule:'none'},{char:'رِّ',rule:'none'}] },
+    { targetRule:'green', question:'حكم إدغام', items:[{char:'يَكُ',rule:'none'},{char:'نْ',rule:'green'},{char:' ',rule:'none'},{char:'لَ',rule:'none'},{char:'هُ',rule:'none'}] },
+    { targetRule:'blue', question:'حرف قلقلة', items:[{char:'يَ',rule:'none'},{char:'لِ',rule:'none'},{char:'د',rule:'blue'},{char:'ْ',rule:'none'}] },
+    { targetRule:'blue', question:'حرف قلقلة', items:[{char:'أَ',rule:'none'},{char:'ب',rule:'blue'},{char:'ْتَرُ',rule:'none'}] }
+  ];
+
+  async function init(){
+    currentScore = await Persist.getNumber('fusha-mushaf-score', 0);
+    document.getElementById('mushaf-score').innerText = currentScore;
+    renderSurahBar();
+    loadSurah('falaq');
+    renderLevelBar();
+    if(!('speechSynthesis' in window)){
+      const btn = document.getElementById('tts-btn');
+      if(btn){ btn.disabled = true; btn.title = 'النطق الصوتي غير مدعوم في هذا المتصفح'; btn.style.opacity = '0.4'; }
+    }
+  }
+
+  function renderSurahBar(){
+    const bar = document.getElementById('surah-bar');
+    bar.innerHTML = SURAHS.map(s =>
+      `<button class="surah-chip ${s.id===activeSurahId?'active':''}" onclick="Mushaf.loadSurah('${s.id}')">سورة ${s.name}</button>`
+    ).join('');
+  }
+
+  function loadSurah(id){
+    activeSurahId = id;
+    renderSurahBar();
+    const surah = SURAHS.find(s => s.id === id);
+    const container = document.getElementById('quran-display');
+    container.innerHTML = surah.ayat.map((a, i) =>
+      `<div class="ayah" onclick="Mushaf.showRule(this,'${id}',${i})">${a.html} (${i+1})</div>`
+    ).join(' ');
+    document.getElementById('exp-text').innerText = 'اختر آية لترى شرح التجويد.';
+    currentPlainText = '';
+  }
+
+  function switchTab(btn, tabId){
+    document.querySelectorAll('.md-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.md-tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    if(tabId === 'game-tab') initColoringGame();
+  }
+
+  function showRule(el, surahId, ayahIdx){
+    document.querySelectorAll('.ayah').forEach(a => a.classList.remove('active-ayah'));
+    el.classList.add('active-ayah');
+    const surah = SURAHS.find(s => s.id === surahId);
+    const ayah = surah.ayat[ayahIdx];
+    currentPlainText = ayah.plain;
+    const colorVar = ayah.color === 'red' ? 'var(--md-red)' : ayah.color === 'green' ? 'var(--md-green)' : ayah.color === 'blue' ? 'var(--md-blue)' : '#aaa';
+    const expIcon = document.getElementById('exp-icon');
+    const expText = document.getElementById('exp-text');
+    const expPanel = document.getElementById('exp-panel');
+    expIcon.style.color = colorVar;
+    expText.innerHTML = `<strong style="color:${colorVar}">آية ${ayahIdx+1}:</strong> ${ayah.exp}`;
+    expPanel.classList.add('show');
+  }
+
+  function speakActive(){
+    if(!('speechSynthesis' in window) || !currentPlainText) return;
+    const btn = document.getElementById('tts-btn');
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(currentPlainText);
+    utt.lang = 'ar-SA';
+    utt.rate = 0.75;
+    utt.onstart = () => btn.classList.add('speaking');
+    utt.onend = () => btn.classList.remove('speaking');
+    utt.onerror = () => btn.classList.remove('speaking');
+    window.speechSynthesis.speak(utt);
+  }
+
+  function renderLevelBar(){
+    const bar = document.getElementById('md-level-bar');
+    const labels = [{n:1,l:'🟢 سهل'},{n:2,l:'🟡 متوسط'},{n:3,l:'🔴 صعب'}];
+    bar.innerHTML = labels.map(x =>
+      `<button class="md-level-btn ${mdLevel===x.n?'active':''}" onclick="Mushaf.setLevel(${x.n})">${x.l}</button>`
+    ).join('');
+  }
+  function setLevel(n){ mdLevel = n; renderLevelBar(); loadRandomLevel(); }
+
+  function selectPen(el, color){
+    currentSelectedPen = color;
+    document.querySelectorAll('.md-pen').forEach(p => p.classList.remove('active-pen'));
+    el.classList.add('active-pen');
+  }
+
+  function initColoringGame(){
+    document.getElementById('mushaf-score').innerText = currentScore;
+    loadRandomLevel();
+  }
+
+  function loadRandomLevel(){
+    const board = document.getElementById('hollow-board');
+    board.innerHTML = '';
+    const pool = mdLevel === 3 ? COLORING_ROUNDS : COLORING_ROUNDS.filter(r => r.items.length <= (mdLevel === 1 ? 3 : 5));
+    const level = (pool.length ? pool : COLORING_ROUNDS)[Math.floor(Math.random() * (pool.length ? pool.length : COLORING_ROUNDS.length))];
+    let qColor = level.targetRule === 'red' ? 'var(--md-red)' : (level.targetRule === 'green' ? 'var(--md-green)' : 'var(--md-blue)');
+    document.getElementById('game-question').innerHTML = `ابحث عن: <strong style="color:${qColor};">${level.question}</strong> ولونه!`;
+    const wordContainer = document.createElement('div');
+    wordContainer.className = 'hollow-word';
+    level.items.forEach(item => {
+      if(item.char === ' '){ wordContainer.innerHTML += '&nbsp;'; return; }
+      const span = document.createElement('span');
+      span.className = 'hollow-char';
+      span.innerText = item.char;
+      span.dataset.rule = item.rule;
+      span.onclick = function(){ checkColoring(this, level.targetRule); };
+      wordContainer.appendChild(span);
+    });
+    board.appendChild(wordContainer);
+  }
+
+  async function checkColoring(element, targetRule){
+    if(element.dataset.rule === 'none'){ triggerError(element); return; }
+    if(element.dataset.rule !== currentSelectedPen){ triggerError(element); return; }
+    if(element.dataset.rule === currentSelectedPen && currentSelectedPen === targetRule){
+      element.className = `colored-${currentSelectedPen}`;
+      await triggerSuccess();
+    }
+  }
+
+  function triggerError(element){
+    beep('error');
+    element.classList.add('shake-error');
+    setTimeout(() => element.classList.remove('shake-error'), 400);
+  }
+
+  async function triggerSuccess(){
+    cheer();
+    const pts = mdLevel === 1 ? 5 : (mdLevel === 2 ? 8 : 12);
+    currentScore += pts;
+    document.getElementById('mushaf-score').innerText = currentScore;
+    await Persist.setNumber('fusha-mushaf-score', currentScore);
+    const board = document.getElementById('hollow-board');
+    const r = board.getBoundingClientRect();
+    burstConfetti(r.left + r.width/2, r.top + r.height/2);
+    setTimeout(loadRandomLevel, 1400);
+  }
+
+  return { init, switchTab, showRule, selectPen, loadSurah, speakActive, setLevel };
+})();
+
+App.init();
+</script>
+</body>
+</html>
