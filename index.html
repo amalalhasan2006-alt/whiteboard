@@ -77,11 +77,16 @@ button{font-family:inherit;}
 
 .toolbar{
   position:absolute;left:50%;transform:translateX(-50%);background:var(--toolbar-bg);
-  padding:10px 20px;border-radius:30px;box-shadow:var(--shadow);display:flex;gap:16px;
+  padding:10px 20px;border-radius:30px;box-shadow:var(--shadow);display:flex;gap:16px;align-items:center;
   z-index:100;backdrop-filter:blur(5px);border:1px solid rgba(0,0,0,0.05);flex-wrap:wrap;justify-content:center;max-width:92%;
 }
-.top-toolbar{top:16px;}
-.bottom-toolbar{bottom:16px;}
+.unified-toolbar{top:16px;cursor:default;touch-action:none;}
+.toolbar-grip{
+  cursor:grab;font-size:20px;color:#999;padding:6px 8px;border-radius:8px;user-select:none;
+  touch-action:none;line-height:1;
+}
+.toolbar-grip:hover{color:var(--primary-color);background:rgba(0,0,0,0.05);}
+.toolbar-grip:active{cursor:grabbing;}
 
 .icon-btn{
   background:none;border:none;font-size:22px;color:var(--primary-color);cursor:pointer;
@@ -115,10 +120,6 @@ button{font-family:inherit;}
 #side-panel.dark-panel .panel-title{color:var(--accent-color);}
 #side-panel.dark-panel .panel-content{color:#eee;}
 
-.bg-controls{
-  position:absolute;top:16px;right:16px;background:var(--toolbar-bg);padding:10px;border-radius:15px;
-  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;z-index:100;
-}
 .bg-option-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .bg-option{
   border:2px solid #ddd;border-radius:12px;padding:14px 8px;cursor:pointer;text-align:center;
@@ -508,26 +509,21 @@ button{font-family:inherit;}
     <section id="mode-board" class="app-mode active">
       <div id="board-container">
 
-        <div class="bg-controls">
-          <button class="icon-btn" onclick="Board.openPanel('background')" data-title="خلفية السبورة">🖼️</button>
-        </div>
-
         <div id="board-stage" class="mode-write">
-          <textarea id="board-text" placeholder="اكتب هنا... ثم افتح لوحة (التشكيل) لإضافة الحركات"></textarea>
+          <textarea id="board-text"></textarea>
           <canvas id="board-canvas"></canvas>
         </div>
 
         <input type="file" id="file-uploader" accept="image/png, image/jpeg, application/pdf" style="display:none;" onchange="Board.handleFileUpload(event)">
 
-        <div class="toolbar top-toolbar">
+        <div class="toolbar unified-toolbar" id="unified-toolbar">
+          <span class="toolbar-grip" id="toolbar-grip" title="اسحب لنقل الشريط">⠿</span>
+          <button class="icon-btn" onclick="Board.openPanel('background')" data-title="خلفية السبورة">🖼️</button>
           <button class="icon-btn" onclick="Board.openPanel('tashkeel')" data-title="التشكيل والمدود">🔤</button>
           <button class="icon-btn" onclick="Board.openPanel('pens')" data-title="الأقلام والفرش">🖊️</button>
           <button class="icon-btn" onclick="Board.openPanel('colors')" data-title="الألوان">🎨</button>
           <button class="icon-btn color-upload" onclick="document.getElementById('file-uploader').click()" data-title="رفع صور وPDF">📤</button>
           <button class="icon-btn" onclick="Board.startScreenShare()" data-title="مشاركة الشاشة">🖥️</button>
-        </div>
-
-        <div class="toolbar bottom-toolbar">
           <button class="icon-btn color-tajweed" onclick="App.switchMode('mushaf')" data-title="مصحف التجويد">📖</button>
           <button class="icon-btn color-games" onclick="App.switchMode('games')" data-title="ألعاب الذكاء">🧩</button>
           <button class="icon-btn" onclick="Board.clearBoard()" data-title="الممحاة">🧹</button>
@@ -903,6 +899,35 @@ const Board = (function(){
     canvas.addEventListener('pointerdown', startDraw);
     canvas.addEventListener('pointermove', draw);
     window.addEventListener('pointerup', stopDraw);
+
+    initToolbarDrag();
+  }
+
+  function initToolbarDrag(){
+    const toolbar = document.getElementById('unified-toolbar');
+    const grip = document.getElementById('toolbar-grip');
+    if(!toolbar || !grip) return;
+    let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+    grip.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const rect = toolbar.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
+      toolbar.style.transform = 'none';
+      toolbar.style.left = (rect.left - parentRect.left) + 'px';
+      toolbar.style.top = (rect.top - parentRect.top) + 'px';
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      startLeft = rect.left - parentRect.left; startTop = rect.top - parentRect.top;
+      grip.setPointerCapture(e.pointerId);
+    });
+    grip.addEventListener('pointermove', (e) => {
+      if(!dragging) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      toolbar.style.left = (startLeft + dx) + 'px';
+      toolbar.style.top = (startTop + dy) + 'px';
+    });
+    grip.addEventListener('pointerup', () => { dragging = false; });
+    grip.addEventListener('pointercancel', () => { dragging = false; });
   }
 
   function resizeCanvas(){
