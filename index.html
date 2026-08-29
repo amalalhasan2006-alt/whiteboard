@@ -25,6 +25,7 @@ button{font-family:inherit;}
 }
 .appbar-brand{display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:bold;letter-spacing:0.5px;}
 .appbar-brand i{color:var(--brand-pink);}
+.appbar-actions{display:flex;gap:10px;}
 .appbar-back{
   background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;
   padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;gap:8px;
@@ -209,11 +210,7 @@ button{font-family:inherit;}
   background-color:var(--game-bg);color:var(--g-text-light);
   background-image:radial-gradient(circle at center,#123322 0%,#08150f 100%);overflow:hidden;
 }
-.game-header{
-  display:flex;justify-content:space-between;align-items:center;padding:10px 22px;
-  background:rgba(0,0,0,0.35);border-bottom:2px solid var(--neon-blue);
-  box-shadow:0 0 15px rgba(0,243,255,0.3);font-size:1.15rem;font-weight:bold;z-index:200;flex-wrap:wrap;gap:8px;
-}
+.menu-stats-row{display:flex;justify-content:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
 .stat-box{display:flex;align-items:center;gap:8px;background:var(--g-panel-bg);padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);}
 .timer{color:var(--neon-yellow);}
 .timer.timer-low{color:var(--neon-pink);animation:pulse-warn 0.6s infinite;}
@@ -312,7 +309,7 @@ button{font-family:inherit;}
 }
 
 /* ===== لعبة 2: توصيل النقاط ===== */
-#dots-wrap{width:100%;max-width:560px;height:100%;max-height:520px;position:relative;}
+#dots-wrap{width:100%;max-width:560px;height:65vh;max-height:480px;position:relative;}
 #dots-canvas{position:absolute;inset:0;width:100%;height:100%;}
 .dot-point{
   position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:var(--neon-yellow);
@@ -321,7 +318,7 @@ button{font-family:inherit;}
 }
 .dot-point.done{background:var(--neon-green);box-shadow:0 0 12px var(--neon-green);transform:scale(0.85);}
 .dot-point.wrong-dot{animation:ball-shake 0.3s;background:var(--neon-pink);}
-#shape-reveal-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:1.4rem;background:rgba(0,0,0,0.6);padding:8px 22px;border-radius:20px;z-index:6;}
+#shape-reveal-label{position:relative;font-size:1.4rem;background:rgba(0,0,0,0.6);padding:8px 22px;border-radius:20px;z-index:6;margin-bottom:14px;}
 
 /* ===== لعبة 3: صيد الحروف (بركة أسماك) ===== */
 #game-catch-area{
@@ -330,8 +327,14 @@ button{font-family:inherit;}
 }
 .water-bubble{position:absolute;bottom:-30px;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.35);animation:bubble-rise linear forwards;}
 @keyframes bubble-rise{to{transform:translateY(-620px);opacity:0;}}
-.bg-fish{position:absolute;font-size:1.8rem;opacity:0.35;pointer-events:none;animation:fish-drift linear infinite;filter:blur(0.3px);}
-@keyframes fish-drift{from{transform:translateX(-60px) scaleX(1);}50.01%{transform:translateX(calc(50vw)) scaleX(-1);}to{transform:translateX(calc(100vw + 60px)) scaleX(-1);}}
+.bg-fish{position:absolute;left:8%;font-size:1.8rem;opacity:0.45;pointer-events:none;animation:fish-swim ease-in-out infinite;filter:blur(0.3px);z-index:1;}
+@keyframes fish-swim{
+  0%{transform:translateX(0) scaleX(1);}
+  45%{transform:translateX(min(75vw,600px)) scaleX(1);}
+  50%{transform:translateX(min(75vw,600px)) scaleX(-1);}
+  95%{transform:translateX(0) scaleX(-1);}
+  100%{transform:translateX(0) scaleX(1);}
+}
 .bg-octopus{position:absolute;bottom:10px;font-size:2.2rem;opacity:0.5;pointer-events:none;animation:octopus-bob 3s ease-in-out infinite;}
 @keyframes octopus-bob{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-8px) rotate(4deg);}}
 .bg-seaweed{position:absolute;bottom:-6px;font-size:2rem;opacity:0.55;pointer-events:none;transform-origin:bottom center;animation:seaweed-sway 2.6s ease-in-out infinite;}
@@ -341,7 +344,7 @@ button{font-family:inherit;}
   transition:transform 0.1s;
   background:rgba(255,255,255,0.95);border:3px solid #fff;border-radius:50% 50% 50% 10px;
   width:64px;height:64px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 10px rgba(0,0,0,0.35);
+  box-shadow:0 3px 10px rgba(0,0,0,0.35);z-index:5;
 }
 .floating-letter:active{transform:scale(0.8);}
 #target-instruction{
@@ -390,6 +393,21 @@ button{font-family:inherit;}
 
 /* ===== مؤثرات عامة: قصاصات احتفال ===== */
 .confetti-piece{position:fixed;top:0;left:0;width:10px;height:10px;pointer-events:none;z-index:9999;border-radius:2px;}
+
+.idle-mascot{position:absolute;bottom:14px;left:14px;font-size:2.4rem;z-index:8;animation:mascot-bob 2.4s ease-in-out infinite;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));}
+
+.mascot-celebrate{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
+  gap:14px;z-index:50;background:rgba(0,0,0,0.55);
+}
+.mascot-celebrate.show{display:flex;}
+.mc-char{font-size:2.6rem;animation:mascot-pop 0.5s ease;position:absolute;top:18%;right:20%;}
+.reveal-emoji{font-size:9rem;animation:reveal-pop 0.6s cubic-bezier(.2,.9,.3,1.3);filter:drop-shadow(0 10px 20px rgba(0,0,0,0.5));}
+@keyframes reveal-pop{0%{transform:scale(0) rotate(-15deg);opacity:0;}70%{transform:scale(1.25) rotate(6deg);opacity:1;}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+@keyframes mascot-pop{0%{transform:scale(0) rotate(-20deg);}60%{transform:scale(1.2) rotate(8deg);}100%{transform:scale(1) rotate(0deg);}}
+.mc-bubble{background:#fff;color:#12121f;border-radius:20px;padding:16px 30px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:80%;}
+#mc-praise{font-size:1.3rem;font-weight:bold;color:var(--neon-pink,#ff007f);margin-bottom:6px;}
+#mc-word{font-size:1.6rem;font-weight:bold;}
 
 /* ===== MUSHAF MODE ===== */
 #mode-mushaf{
@@ -474,9 +492,14 @@ button{font-family:inherit;}
 <div id="app-shell">
   <header id="appbar">
     <div class="appbar-brand">🖍️ Fusha Zone</div>
-    <button id="appbar-back" class="appbar-back" onclick="App.switchMode('board')" style="display:none;">
-      🏠 رجوع للسبورة
-    </button>
+    <div class="appbar-actions">
+      <button id="appbar-gamesmenu" class="appbar-back" onclick="Games.showScreen('menu-screen')" style="display:none;">
+        🎮 قائمة الألعاب
+      </button>
+      <button id="appbar-back" class="appbar-back" onclick="App.switchMode('board')" style="display:none;">
+        🏠 رجوع للسبورة
+      </button>
+    </div>
   </header>
 
   <main id="app-main">
@@ -524,16 +547,12 @@ button{font-family:inherit;}
     <!-- ===================== GAMES MODE ===================== -->
     <section id="mode-games" class="app-mode">
       <div id="game-portal">
-        <div class="game-header">
-          <button class="g-btn g-btn-pink" style="padding:6px 16px;font-size:0.95rem;margin:0;" onclick="Games.showScreen('menu-screen')">
-            🏠 قائمة الألعاب
-          </button>
-          <div class="stat-box high-score">🏆 أعلى نتيجة: <span id="ui-highscore">0</span></div>
-          <div class="stat-box score">⭐ النقاط: <span id="ui-score">0</span></div>
-          <div class="stat-box timer">⏱️ <span id="ui-timer">00:00</span></div>
-        </div>
-
         <div id="menu-screen" class="screen active">
+          <div class="menu-stats-row">
+            <div class="stat-box high-score">🏆 أعلى نتيجة: <span id="ui-highscore">0</span></div>
+            <div class="stat-box score">⭐ آخر نتيجة: <span id="ui-score">0</span></div>
+          </div>
+          <span id="ui-timer" style="display:none;">00:00</span>
           <div class="mascot-bubble">
             <span class="mascot-cat">🐱</span>
             <div class="bubble-text">مرحباً أيها الأبطال! جاهزين نلعب ونتعلم سوا؟ 🌟</div>
@@ -564,6 +583,18 @@ button{font-family:inherit;}
           </div>
         </div>
 
+        <div id="section-screen" class="screen">
+          <h1>اختر القسم</h1>
+          <div class="level-cards">
+            <div class="level-card easy" onclick="Games.chooseSection('arabic')">
+              <div class="lc-title">🔤 اللغة العربية</div><div class="lc-time">حروف، حركات، مدود</div>
+            </div>
+            <div class="level-card hard" onclick="Games.chooseSection('tajweed')">
+              <div class="lc-title">📗 التجويد</div><div class="lc-time">أحكام ومهارات متقدمة</div>
+            </div>
+          </div>
+        </div>
+
         <div id="game-1-screen" class="screen">
           <div id="pitch">
             <div class="goal-row" id="goal-row"></div>
@@ -574,14 +605,24 @@ button{font-family:inherit;}
 
         <div id="game-2-screen" class="screen">
           <div id="shape-reveal-label">وصّل النقاط بالترتيب 1، 2، 3...</div>
+          <div class="idle-mascot" id="g2-mascot">🐱</div>
           <div id="dots-wrap">
             <canvas id="dots-canvas"></canvas>
             <div id="dots-layer"></div>
+          </div>
+          <div id="mascot-celebrate" class="mascot-celebrate">
+            <span class="reveal-emoji" id="reveal-emoji">🦆</span>
+            <span class="mc-char" id="mc-char">🐱</span>
+            <div class="mc-bubble">
+              <div id="mc-praise">أحسنت!</div>
+              <div id="mc-word"></div>
+            </div>
           </div>
         </div>
 
         <div id="game-3-screen" class="screen">
           <div id="target-instruction"><span id="mission-prompt">اصطد الحرف الصحيح!</span></div>
+          <div class="idle-mascot" id="g3-mascot">🦆</div>
           <div id="game-catch-area"></div>
         </div>
 
@@ -741,6 +782,65 @@ function burstConfetti(clientX, clientY, count){
     ], { duration: 700 + Math.random() * 400, easing: 'cubic-bezier(.2,.8,.3,1)' });
     setTimeout(() => el.remove(), 1150);
   }
+}
+
+const PARTY_EMOJI = ['🎉','🎊','🎈','✨','🌟'];
+function bigCelebration(clientX, clientY){
+  burstConfetti(clientX, clientY, 36);
+  for(let i = 0; i < 10; i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.background = 'transparent';
+    el.style.fontSize = (18 + Math.random()*14) + 'px';
+    el.style.width = 'auto'; el.style.height = 'auto';
+    el.innerText = PARTY_EMOJI[Math.floor(Math.random()*PARTY_EMOJI.length)];
+    el.style.left = clientX + 'px';
+    el.style.top = clientY + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 90 + Math.random() * 140;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist - 60;
+    document.body.appendChild(el);
+    el.animate([
+      { transform: 'translate(0,0) scale(0.5) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(1.3) rotate(${Math.random()*360}deg)`, opacity: 0 }
+    ], { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    setTimeout(() => el.remove(), 1450);
+  }
+}
+
+function speakWord(text, opts){
+  if(!('speechSynthesis' in window) || !text) return;
+  try{
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'ar-SA';
+    utt.rate = (opts && opts.rate) || 0.8;
+    utt.pitch = (opts && opts.pitch) || 1.0;
+    window.speechSynthesis.speak(utt);
+  }catch(e){ /* تجاهل إن لم يكن النطق مدعوماً */ }
+}
+
+/* ينطق الكلمة مرتين بهدوء ثم يستدعي onDone — مع صمّام أمان لو الصوت غير مدعوم أو لم يُطلق حدث النهاية */
+function speakWordTwice(text, onDone){
+  const finish = () => { if(onDone) onDone(); };
+  if(!('speechSynthesis' in window) || !text){ setTimeout(finish, 1500); return; }
+  try{
+    window.speechSynthesis.cancel();
+    let finished = false;
+    const safeFinish = () => { if(!finished){ finished = true; finish(); } };
+    const speakOnce = (cb) => {
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'ar-SA'; utt.rate = 0.72; utt.pitch = 1.0;
+      let called = false;
+      const proceed = () => { if(!called){ called = true; cb(); } };
+      utt.onend = proceed;
+      utt.onerror = proceed;
+      window.speechSynthesis.speak(utt);
+      setTimeout(proceed, 3200); // صمّام أمان إن لم يتوفر صوت عربي بالمتصفح
+    };
+    speakOnce(() => { setTimeout(() => speakOnce(safeFinish), 450); });
+  }catch(e){ setTimeout(finish, 1500); }
 }
 
 /* ========================================================
@@ -1099,6 +1199,7 @@ const Games = (function(){
   let timerInterval = null;
   let activeGame = 0;
   let activeLevel = 1;
+  let activeSection = 'arabic';
   let highScore = 0;
   let gameLoops = [];
 
@@ -1119,9 +1220,15 @@ const Games = (function(){
     document.getElementById(screenId).classList.add('active');
     clearInterval(timerInterval);
     clearGameIntervals();
+    const gmBtn = document.getElementById('appbar-gamesmenu');
+    if(gmBtn) gmBtn.style.display = (screenId === 'menu-screen') ? 'none' : 'flex';
   }
 
-  function selectLevel(gameId){ activeGame = gameId; showScreen('level-screen'); }
+  function selectLevel(gameId){
+    activeGame = gameId;
+    showScreen(gameId === 3 ? 'section-screen' : 'level-screen');
+  }
+  function chooseSection(sec){ activeSection = sec; showScreen('level-screen'); }
 
   function startGame(level){
     activeLevel = level;
@@ -1276,38 +1383,48 @@ const Games = (function(){
     for(let i=0;i<n;i++){ const ang=(-90+i*(360/n))*Math.PI/180; p.push([cx+r*Math.cos(ang), cy+r*Math.sin(ang)]); }
     return p;
   }
+  function arcPts(cx, cy, rx, ry, startDeg, endDeg, n){
+    const p = [];
+    for(let i=0;i<n;i++){
+      const t = startDeg + (endDeg - startDeg) * (i/(n-1));
+      const rad = t * Math.PI/180;
+      p.push([cx + rx*Math.cos(rad), cy + ry*Math.sin(rad)]);
+    }
+    return p;
+  }
 
   const g2Shapes = [
     // ---- سهل: أشياء يومية بسيطة ----
-    { name:'قلم', en:'Pen', emoji:'✏️', level:1, pts:[[0.50,0.08],[0.58,0.20],[0.58,0.75],[0.50,0.90],[0.42,0.75],[0.42,0.20]] },
-    { name:'ورقة', en:'Paper', emoji:'📄', level:1, pts:[[0.30,0.15],[0.62,0.15],[0.70,0.23],[0.70,0.85],[0.30,0.85]] },
-    { name:'كتاب', en:'Book', emoji:'📖', level:1, pts:[[0.28,0.25],[0.72,0.25],[0.72,0.80],[0.28,0.80]] },
-    { name:'حجر', en:'Rock', emoji:'🪨', level:1, pts:[[0.28,0.72],[0.28,0.50],[0.42,0.32],[0.62,0.30],[0.75,0.50],[0.62,0.78]] },
-    { name:'كوب', en:'Cup', emoji:'🥤', level:1, pts:[[0.35,0.30],[0.65,0.30],[0.62,0.80],[0.38,0.80]] },
-    { name:'شمس', en:'Sun', emoji:'☀️', level:1, pts:circlePts(8,0.5,0.5,0.32) },
-    { name:'قمر', en:'Moon', emoji:'🌕', level:1, pts:circlePts(7,0.5,0.5,0.30) },
-    { name:'هلال', en:'Crescent', emoji:'🌙', level:1, pts:[[0.58,0.22],[0.46,0.30],[0.40,0.45],[0.40,0.60],[0.46,0.75],[0.58,0.82]] },
-    { name:'نجمة', en:'Star', emoji:'⭐', level:1, pts:pentagramPts(0.5,0.52,0.34) },
+    { name:'قلم', en:'Pen', emoji:'✏️', level:1, fill:'rgba(255,193,7,0.45)', pts:[[0.50,0.08],[0.58,0.20],[0.58,0.75],[0.50,0.90],[0.42,0.75],[0.42,0.20]] },
+    { name:'ورقة', en:'Paper', emoji:'📄', level:1, fill:'rgba(255,255,255,0.55)', pts:[[0.30,0.15],[0.62,0.15],[0.70,0.23],[0.70,0.85],[0.30,0.85]] },
+    { name:'كتاب', en:'Book', emoji:'📖', level:1, fill:'rgba(255,111,97,0.45)', pts:[[0.28,0.25],[0.72,0.25],[0.72,0.80],[0.28,0.80]] },
+    { name:'حجر', en:'Rock', emoji:'🪨', level:1, fill:'rgba(158,158,158,0.5)', pts:[[0.28,0.72],[0.28,0.50],[0.42,0.32],[0.62,0.30],[0.75,0.50],[0.62,0.78]] },
+    { name:'كوب', en:'Cup', emoji:'🥤', level:1, fill:'rgba(0,188,212,0.4)', pts:[[0.35,0.30],[0.65,0.30],[0.62,0.80],[0.38,0.80]] },
+    { name:'شمس', en:'Sun', emoji:'☀️', level:1, fill:'rgba(255,193,7,0.55)', pts:circlePts(8,0.5,0.5,0.32) },
+    { name:'قمر', en:'Moon', emoji:'🌕', level:1, fill:'rgba(255,241,118,0.5)', pts:circlePts(7,0.5,0.5,0.30) },
+    { name:'هلال', en:'Crescent', emoji:'🌙', level:1, fill:'rgba(255,241,118,0.5)', pts:[[0.58,0.22],[0.46,0.30],[0.40,0.45],[0.40,0.60],[0.46,0.75],[0.58,0.82]] },
+    { name:'نجمة', en:'Star', emoji:'⭐', level:1, fill:'rgba(255,235,59,0.55)', pts:pentagramPts(0.5,0.52,0.34) },
     // ---- متوسط: أشياء بالبيت والحديقة ----
-    { name:'بطة', en:'Duck', emoji:'🦆', level:2, pts:[[0.30,0.65],[0.30,0.48],[0.42,0.36],[0.52,0.30],[0.60,0.24],[0.66,0.32],[0.68,0.50],[0.62,0.68],[0.40,0.72]] },
-    { name:'كوكب', en:'Planet', emoji:'🪐', level:2, pts:circlePts(9,0.5,0.5,0.28) },
-    { name:'سرير', en:'Bed', emoji:'🛏️', level:2, pts:[[0.20,0.55],[0.20,0.40],[0.30,0.40],[0.30,0.55],[0.80,0.55],[0.80,0.75],[0.20,0.75]] },
-    { name:'خزانة', en:'Wardrobe', emoji:'🗄️', level:2, pts:[[0.28,0.18],[0.72,0.18],[0.72,0.82],[0.55,0.82],[0.55,0.90],[0.45,0.82],[0.28,0.82]] },
-    { name:'كرة', en:'Ball', emoji:'⚽', level:2, pts:circlePts(6,0.5,0.5,0.30) },
-    { name:'مكيف', en:'AC Unit', emoji:'❄️', level:2, pts:[[0.20,0.35],[0.80,0.35],[0.80,0.55],[0.20,0.55]] },
-    { name:'شجرة', en:'Tree', emoji:'🌳', level:2, pts:[[0.50,0.15],[0.66,0.35],[0.58,0.50],[0.56,0.50],[0.56,0.82],[0.44,0.82],[0.44,0.50],[0.42,0.50],[0.34,0.35]] },
-    { name:'ساعة', en:'Clock', emoji:'🕐', level:2, pts:circlePts(10,0.5,0.5,0.30) },
-    { name:'زهرة', en:'Flower', emoji:'🌸', level:2, pts:starPts(8,0.5,0.5,0.32,0.18) },
+    { name:'بطة', en:'Duck', emoji:'🦆', level:2, fill:'rgba(255,213,79,0.55)',
+      pts:[[0.30,0.65],[0.30,0.48],[0.42,0.36],[0.52,0.30],[0.60,0.24],[0.66,0.32],[0.68,0.50],[0.62,0.68],[0.40,0.72]] },
+    { name:'كوكب', en:'Planet', emoji:'🪐', level:2, fill:'rgba(179,157,219,0.5)', pts:circlePts(9,0.5,0.5,0.28) },
+    { name:'سرير', en:'Bed', emoji:'🛏️', level:2, fill:'rgba(129,199,212,0.45)', pts:[[0.20,0.55],[0.20,0.40],[0.30,0.40],[0.30,0.55],[0.80,0.55],[0.80,0.75],[0.20,0.75]] },
+    { name:'خزانة', en:'Wardrobe', emoji:'🗄️', level:2, fill:'rgba(161,136,127,0.5)', pts:[[0.28,0.18],[0.72,0.18],[0.72,0.82],[0.55,0.82],[0.55,0.90],[0.45,0.82],[0.28,0.82]] },
+    { name:'كرة', en:'Ball', emoji:'⚽', level:2, fill:'rgba(255,255,255,0.5)', pts:circlePts(6,0.5,0.5,0.30) },
+    { name:'مكيف', en:'AC Unit', emoji:'❄️', level:2, fill:'rgba(179,229,252,0.5)', pts:[[0.20,0.35],[0.80,0.35],[0.80,0.55],[0.20,0.55]] },
+    { name:'شجرة', en:'Tree', emoji:'🌳', level:2, fill:'rgba(102,187,106,0.5)', pts:[[0.50,0.15],[0.66,0.35],[0.58,0.50],[0.56,0.50],[0.56,0.82],[0.44,0.82],[0.44,0.50],[0.42,0.50],[0.34,0.35]] },
+    { name:'ساعة', en:'Clock', emoji:'🕐', level:2, fill:'rgba(255,255,255,0.5)', pts:circlePts(10,0.5,0.5,0.30) },
+    { name:'زهرة', en:'Flower', emoji:'🌸', level:2, fill:'rgba(240,98,146,0.5)', pts:starPts(8,0.5,0.5,0.32,0.18) },
     // ---- صعب: حيوانات ومشاهد أكثر تفصيلاً ----
-    { name:'أرنب', en:'Rabbit', emoji:'🐰', level:3, pts:[[0.42,0.08],[0.46,0.30],[0.40,0.35],[0.34,0.15],[0.30,0.18],[0.34,0.38],[0.30,0.50],[0.35,0.68],[0.50,0.78],[0.65,0.68],[0.68,0.50],[0.60,0.35]] },
-    { name:'أسد', en:'Lion', emoji:'🦁', level:3, pts:starPts(12,0.5,0.5,0.38,0.26) },
-    { name:'فازة بها ورد', en:'Vase of Flowers', emoji:'💐', level:3, pts:[[0.40,0.55],[0.35,0.88],[0.65,0.88],[0.60,0.55],[0.68,0.40],[0.50,0.25],[0.32,0.40]] },
-    { name:'فراشة', en:'Butterfly', emoji:'🦋', level:3, pts:[[0.50,0.40],[0.30,0.15],[0.15,0.25],[0.25,0.45],[0.15,0.60],[0.28,0.75],[0.50,0.60],[0.72,0.75],[0.85,0.60],[0.75,0.45],[0.85,0.25],[0.70,0.15]] },
-    { name:'تاج', en:'Crown', emoji:'👑', level:3, pts:[[0.25,0.75],[0.25,0.45],[0.35,0.60],[0.42,0.30],[0.50,0.55],[0.58,0.30],[0.65,0.60],[0.75,0.45],[0.75,0.75]] },
-    { name:'قصر', en:'Castle', emoji:'🏰', level:3, pts:[[0.25,0.85],[0.25,0.50],[0.30,0.50],[0.30,0.40],[0.38,0.40],[0.38,0.50],[0.45,0.50],[0.45,0.35],[0.55,0.35],[0.55,0.50],[0.62,0.50],[0.62,0.40],[0.70,0.40],[0.70,0.50],[0.75,0.50],[0.75,0.85]] },
-    { name:'طائرة', en:'Airplane', emoji:'✈️', level:3, pts:[[0.50,0.15],[0.55,0.35],[0.85,0.45],[0.85,0.52],[0.56,0.48],[0.58,0.75],[0.70,0.85],[0.70,0.90],[0.50,0.82],[0.30,0.90],[0.30,0.85],[0.42,0.75],[0.44,0.48],[0.15,0.52],[0.15,0.45]] },
-    { name:'نجمة كبيرة', en:'Big Star', emoji:'✨', level:3, pts:starPts(8,0.5,0.5,0.38,0.16) },
-    { name:'فيل', en:'Elephant', emoji:'🐘', level:3, pts:[[0.30,0.55],[0.20,0.45],[0.22,0.30],[0.35,0.25],[0.40,0.35],[0.55,0.30],[0.70,0.35],[0.78,0.50],[0.75,0.65],[0.68,0.85],[0.60,0.85],[0.62,0.68],[0.45,0.68],[0.42,0.85],[0.34,0.85],[0.38,0.65],[0.28,0.70]] }
+    { name:'أرنب', en:'Rabbit', emoji:'🐰', level:3, fill:'rgba(238,238,238,0.55)', pts:[[0.42,0.08],[0.46,0.30],[0.40,0.35],[0.34,0.15],[0.30,0.18],[0.34,0.38],[0.30,0.50],[0.35,0.68],[0.50,0.78],[0.65,0.68],[0.68,0.50],[0.60,0.35]] },
+    { name:'أسد', en:'Lion', emoji:'🦁', level:3, fill:'rgba(255,167,38,0.5)', pts:starPts(12,0.5,0.5,0.38,0.26) },
+    { name:'فازة بها ورد', en:'Vase of Flowers', emoji:'💐', level:3, fill:'rgba(240,98,146,0.45)', pts:[[0.40,0.55],[0.35,0.88],[0.65,0.88],[0.60,0.55],[0.68,0.40],[0.50,0.25],[0.32,0.40]] },
+    { name:'فراشة', en:'Butterfly', emoji:'🦋', level:3, fill:'rgba(129,212,250,0.5)', pts:[[0.50,0.40],[0.30,0.15],[0.15,0.25],[0.25,0.45],[0.15,0.60],[0.28,0.75],[0.50,0.60],[0.72,0.75],[0.85,0.60],[0.75,0.45],[0.85,0.25],[0.70,0.15]] },
+    { name:'تاج', en:'Crown', emoji:'👑', level:3, fill:'rgba(255,215,0,0.5)', pts:[[0.25,0.75],[0.25,0.45],[0.35,0.60],[0.42,0.30],[0.50,0.55],[0.58,0.30],[0.65,0.60],[0.75,0.45],[0.75,0.75]] },
+    { name:'قصر', en:'Castle', emoji:'🏰', level:3, fill:'rgba(206,147,216,0.45)', pts:[[0.25,0.85],[0.25,0.50],[0.30,0.50],[0.30,0.40],[0.38,0.40],[0.38,0.50],[0.45,0.50],[0.45,0.35],[0.55,0.35],[0.55,0.50],[0.62,0.50],[0.62,0.40],[0.70,0.40],[0.70,0.50],[0.75,0.50],[0.75,0.85]] },
+    { name:'طائرة', en:'Airplane', emoji:'✈️', level:3, fill:'rgba(144,202,249,0.5)', pts:[[0.50,0.15],[0.55,0.35],[0.85,0.45],[0.85,0.52],[0.56,0.48],[0.58,0.75],[0.70,0.85],[0.70,0.90],[0.50,0.82],[0.30,0.90],[0.30,0.85],[0.42,0.75],[0.44,0.48],[0.15,0.52],[0.15,0.45]] },
+    { name:'نجمة كبيرة', en:'Big Star', emoji:'✨', level:3, fill:'rgba(255,235,59,0.5)', pts:starPts(8,0.5,0.5,0.38,0.16) },
+    { name:'فيل', en:'Elephant', emoji:'🐘', level:3, fill:'rgba(158,158,158,0.5)', pts:[[0.30,0.55],[0.20,0.45],[0.22,0.30],[0.35,0.25],[0.40,0.35],[0.55,0.30],[0.70,0.35],[0.78,0.50],[0.75,0.65],[0.68,0.85],[0.60,0.85],[0.62,0.68],[0.45,0.68],[0.42,0.85],[0.34,0.85],[0.38,0.65],[0.28,0.70]] }
   ];
 
   let g2Bag = { 1:[], 2:[], 3:[] };
@@ -1370,14 +1487,23 @@ const Games = (function(){
       g2Ctx.beginPath();
       g2Shape.pts.forEach((p,i) => { if(i===0) g2Ctx.moveTo(p[0]*w,p[1]*h); else g2Ctx.lineTo(p[0]*w,p[1]*h); });
       g2Ctx.closePath();
-      g2Ctx.fillStyle = 'rgba(57,255,20,0.35)';
+      g2Ctx.fillStyle = g2Shape.fill || 'rgba(57,255,20,0.35)';
       g2Ctx.fill();
-      document.getElementById('shape-reveal-label').innerText = `${g2Shape.emoji} ${g2Shape.name} — ${g2Shape.en}! أحسنت`;
+      document.getElementById('shape-reveal-label').innerText = 'أحسنت! 🎉';
       addScore(activeLevel === 1 ? 3 : (activeLevel === 2 ? 5 : 8));
       cheer();
-      celebrateAt(document.getElementById('dots-wrap'));
+      const wrapEl = document.getElementById('dots-wrap');
+      const r = wrapEl.getBoundingClientRect();
+      bigCelebration(r.left + r.width/2, r.top + r.height/2);
       praiseToast();
-      setTimeout(loadDotsRound, 1600);
+      document.getElementById('reveal-emoji').innerText = g2Shape.emoji;
+      document.getElementById('mc-praise').innerText = PRAISE_PHRASES[Math.floor(Math.random()*PRAISE_PHRASES.length)];
+      document.getElementById('mc-word').innerHTML = `<strong>${g2Shape.name}</strong> — ${g2Shape.en}`;
+      document.getElementById('mascot-celebrate').classList.add('show');
+      speakWordTwice(g2Shape.name, () => {
+        document.getElementById('mascot-celebrate').classList.remove('show');
+        loadDotsRound();
+      });
     } else {
       beep('success');
     }
@@ -1387,10 +1513,32 @@ const Games = (function(){
      اللعبة 3: صيد الحروف المشكّلة 🎣 — بِرَك التجويد
      =================================================== */
   const MISSION_BUILDERS = {
-    harakah(){
-      const combos = ['بَ','بُ','بِ','تَ','تُ','تِ','جَ','جُ','جِ','سَ','سُ','سِ','مَ','مُ','مِ'];
-      const target = combos[Math.floor(Math.random()*combos.length)];
-      return { prompt:`اصطد الحرف: ${target}`, items: combos.map(c => ({ text:c, match:c===target })) };
+    letterOnly(){
+      const letters = ['ب','ت','ث','ج','ح','خ','د','ر','س','ش','ص','ع','ف','ق','ك','ل','م','ن','هـ','و','ي'];
+      const pool = letters.sort(() => 0.5 - Math.random()).slice(0, 8);
+      const target = pool[Math.floor(Math.random()*pool.length)];
+      return { prompt:`اصطد الحرف: ${target} (بدون حركة)`, items: pool.map(c => ({ text:c, match:c===target })) };
+    },
+    harakahByName(){
+      const marks = [
+        { m:'َ', name:'الفتحة' }, { m:'ُ', name:'الضمة' }, { m:'ِ', name:'الكسرة' },
+        { m:'ً', name:'تنوين الفتح' }, { m:'ٌ', name:'تنوين الضم' }, { m:'ٍ', name:'تنوين الكسر' }
+      ];
+      const roots = ['ب','ت','ج','س','ر','ع','ك','د'];
+      const target = marks[Math.floor(Math.random()*marks.length)];
+      const items = [];
+      roots.forEach(r => marks.forEach(mk => items.push({ text:r+mk.m, match:mk.m===target.m })));
+      return { prompt:`اصطد كل حرف عليه ${target.name}`, items };
+    },
+    sukoonSpot(){
+      const roots = ['ب','ت','ج','س','ر','ك','د','ف'];
+      const items = [];
+      roots.forEach(r => {
+        items.push({ text:r+'ْ', match:true });
+        items.push({ text:r+'َ', match:false });
+        items.push({ text:r+'ُ', match:false });
+      });
+      return { prompt:'اصطد كل حرف عليه سكون', items };
     },
     maddLength(){
       const roots = ['ب','ت','س','ر','ف','ج','ل'];
@@ -1401,7 +1549,15 @@ const Games = (function(){
         items.push({ text:r+'ُ', match:false });
         items.push({ text:r+'ُو', match:true });
       });
-      return { prompt:'اصطد كل حرف فيه مدّ طويل (مثل: با، بُو) وتجنّب الحركة القصيرة', items };
+      return { prompt:'اصطد المد الطبيعي (مثل: با، بُو) وتجنّب الحركة القصيرة', items };
+    },
+    maddType(){
+      const roots = ['ب','ت','س','ر','ف','ج'];
+      const types = [{ suf:'َا', name:'المد بالألف' }, { suf:'ُو', name:'المد بالواو' }, { suf:'ِي', name:'المد بالياء' }];
+      const target = types[Math.floor(Math.random()*types.length)];
+      const items = [];
+      roots.forEach(r => types.forEach(t => items.push({ text:r+t.suf, match:t.suf===target.suf })));
+      return { prompt:`اصطد كل حرف فيه ${target.name} تحديداً`, items };
     },
     qalqalah(){
       const q = ['قْ','طْ','بْ','جْ','دْ'];
@@ -1428,16 +1584,63 @@ const Games = (function(){
       const light = ['ب','ت','ث','ج','د','س','ل'];
       const items = [...heavy.map(t => ({ text:t, match:true })), ...light.map(t => ({ text:t, match:false }))];
       return { prompt:'اصطد الحروف المفخّمة (الثقيلة): خ ص ض ط ظ غ ق', items };
+    },
+    laamRules(){
+      const items = [
+        { text:'الشَّمْسُ', match:true }, { text:'الرَّحْمَن', match:true }, { text:'النَّاسُ', match:true },
+        { text:'الْقَمَرُ', match:false }, { text:'الْعِلْمُ', match:false }, { text:'الْكِتَابُ', match:false }
+      ];
+      return { prompt:'اصطد الكلمات التي فيها لام شمسية (تُدغم ولا تُنطق)', items };
+    },
+    raaRules(){
+      const items = [
+        { text:'رَبَّنَا', match:true }, { text:'رُزِقْنَا', match:true }, { text:'مِرْآة', match:false },
+        { text:'رِزْقٌ', match:false }, { text:'خَيْرٌ', match:false }, { text:'فِرْعَوْنَ', match:false }
+      ];
+      return { prompt:'اصطد الكلمات التي فيها راء مفخّمة (بعد فتح أو ضم)', items };
+    },
+    letterHarakahMix(){
+      const combos = ['بَ','بُ','بِ','تَ','تُ','تِ','جَ','جُ','جِ','سَ','سُ','سِ','مَ','مُ','مِ','رَ','رُ','رِ'];
+      const target = combos[Math.floor(Math.random()*combos.length)];
+      return { prompt:`اصطد الحرف بحركته: ${target}`, items: combos.map(c => ({ text:c, match:c===target })) };
+    },
+    deepQalqalah(){
+      const items = [
+        { text:'يَقْطَعُ', match:true }, { text:'يَجْعَلُ', match:true }, { text:'أَبْصَارُهُمْ', match:true },
+        { text:'يَعْلَمُ', match:false }, { text:'يَذْهَبُ', match:false }, { text:'يَسْمَعُ', match:false }
+      ];
+      return { prompt:'اصطد الكلمات التي فيها قلقلة داخل الكلمة', items };
+    },
+    deepNoonMeem(){
+      const items = [
+        { text:'مِنْ بَعْدِ', match:true }, { text:'مِنْ رَبِّهِمْ', match:true }, { text:'أَنْتُمْ', match:true },
+        { text:'كَتَبَ', match:false }, { text:'ذَهَبَ', match:false }, { text:'قَرَأَ', match:false }
+      ];
+      return { prompt:'اصطد الكلمات التي فيها نون أو ميم ساكنة', items };
+    },
+    deepTafkhim(){
+      const items = [
+        { text:'الظَّالِمِينَ', match:true }, { text:'الصَّالِحَاتِ', match:true }, { text:'قَالُوا', match:true },
+        { text:'الَّذِينَ', match:false }, { text:'الْمُؤْمِنِينَ', match:false }, { text:'السَّمَاءِ', match:false }
+      ];
+      return { prompt:'اصطد الكلمات التي فيها حرف مفخّم (خ ص ض ط ظ غ ق)', items };
     }
   };
-  const MISSIONS_BY_LEVEL = {
-    1: ['harakah','maddLength'],
-    2: ['harakah','maddLength','qalqalah','meemSakinah'],
-    3: ['harakah','maddLength','qalqalah','meemSakinah','noonTanween','tafkhim']
+  const MISSIONS_BY_SECTION_LEVEL = {
+    arabic: {
+      1: ['letterOnly'],
+      2: ['harakahByName'],
+      3: ['letterHarakahMix','maddLength','sukoonSpot']
+    },
+    tajweed: {
+      1: ['tafkhim','qalqalah','maddLength'],
+      2: ['noonTanween','meemSakinah','laamRules','raaRules'],
+      3: ['maddType','deepQalqalah','deepNoonMeem','deepTafkhim']
+    }
   };
   let currentMission = null;
   let missionRotateTimer = null;
-  const FISH_DECOR = ['🐠','🐟','🐡'];
+  const FISH_DECOR = ['🐠','🐟','🐡','🐬'];
 
   function initGame3(){
     setupDecor();
@@ -1448,7 +1651,7 @@ const Games = (function(){
     gameLoops.push(missionRotateTimer);
   }
   function pickMission(){
-    const keys = MISSIONS_BY_LEVEL[activeLevel];
+    const keys = MISSIONS_BY_SECTION_LEVEL[activeSection][activeLevel];
     const key = keys[Math.floor(Math.random()*keys.length)];
     currentMission = MISSION_BUILDERS[key]();
     document.getElementById('mission-prompt').innerText = currentMission.prompt;
@@ -1456,13 +1659,13 @@ const Games = (function(){
   function setupDecor(){
     const area = document.getElementById('game-catch-area');
     if(!area) return;
-    for(let i=0;i<3;i++){
+    for(let i=0;i<5;i++){
       const f = document.createElement('div');
       f.className = 'bg-fish';
       f.innerText = FISH_DECOR[i % FISH_DECOR.length];
-      f.style.bottom = (15 + i*22) + '%';
-      f.style.animationDuration = (14 + i*4) + 's';
-      f.style.animationDelay = (i*2) + 's';
+      f.style.bottom = (10 + i*16) + '%';
+      f.style.animationDuration = (12 + i*3) + 's';
+      f.style.animationDelay = (i*1.7) + 's';
       area.appendChild(f);
     }
     const octo = document.createElement('div');
@@ -1700,7 +1903,7 @@ const Games = (function(){
     }
   }
 
-  return { init, leave, showScreen, selectLevel, startGame, kickBall, useHint };
+  return { init, leave, showScreen, selectLevel, chooseSection, startGame, kickBall, useHint };
 })();
 
 /* ========================================================
