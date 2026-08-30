@@ -26,6 +26,16 @@ button{font-family:inherit;}
 .appbar-brand{display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:bold;letter-spacing:0.5px;}
 .appbar-brand i{color:var(--brand-pink);}
 .appbar-actions{display:flex;gap:10px;}
+
+.lang-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:2000;}
+.lang-modal.show{display:flex;}
+.lang-modal-card{background:#fff;color:#222;border-radius:20px;padding:22px;max-width:420px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+.lang-modal-header{display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:1.15rem;margin-bottom:16px;border-bottom:2px solid #eee;padding-bottom:12px;}
+.lang-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.lang-chip{border:2px solid #ddd;border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;font-weight:bold;transition:0.2s;}
+.lang-chip:hover{border-color:#4361ee;}
+.lang-chip.selected{background:#4361ee;color:#fff;border-color:#4361ee;}
+.lang-note{font-size:0.8rem;color:gray;margin-top:16px;text-align:center;}
 .appbar-back{
   background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;
   padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;gap:8px;
@@ -68,7 +78,7 @@ button{font-family:inherit;}
 #board-text{
   position:absolute;inset:0;width:100%;height:100%;background:transparent;border:none;outline:none;
   font-size:3rem;color:var(--text-dark);text-align:center;resize:none;line-height:1.5;
-  font-family:'Traditional Arabic','Segoe UI',Tahoma,serif;z-index:11;
+  font-family:'Traditional Arabic','Segoe UI',Tahoma,serif;z-index:11;direction:rtl;
 }
 #board-container.bg-dark-mode #board-text{color:var(--text-light);}
 #board-stage.mode-draw #board-text{pointer-events:none;}
@@ -425,8 +435,8 @@ button{font-family:inherit;}
 .md-tab-content{display:none;height:calc(100% - 60px);position:relative;}
 .md-tab-content.active{display:flex;flex-direction:column;}
 
-.quran-container{flex-grow:1;padding:20px 30px;overflow-y:auto;text-align:center;font-family:'Traditional Arabic',serif;font-size:2.8rem;line-height:2;}
-.ayah{display:inline;cursor:pointer;padding:5px 10px;border-radius:10px;transition:background 0.3s;}
+.quran-container{flex-grow:1;padding:20px 30px;overflow-y:auto;text-align:center;font-family:'Traditional Arabic',serif;font-size:2.8rem;line-height:2;direction:rtl;}
+.ayah{display:inline-block;cursor:pointer;padding:5px 10px;border-radius:10px;transition:background 0.3s;unicode-bidi:isolate;}
 .ayah:hover,.ayah.active-ayah{background:var(--md-highlight);}
 .rule-madd{color:var(--md-red);text-shadow:0 0 8px rgba(255,42,95,0.6);}
 .rule-ikhfa{color:var(--md-green);text-shadow:0 0 8px rgba(0,255,136,0.6);}
@@ -495,13 +505,27 @@ button{font-family:inherit;}
     <div class="appbar-brand">🖍️ Fusha Zone</div>
     <div class="appbar-actions">
       <button id="appbar-gamesmenu" class="appbar-back" onclick="Games.showScreen('menu-screen')" style="display:none;">
-        🎮 قائمة الألعاب
+        🎮 <span data-i18n="gamesMenuBtn">قائمة الألعاب</span>
       </button>
       <button id="appbar-back" class="appbar-back" onclick="App.switchMode('board')" style="display:none;">
-        🏠 رجوع للسبورة
+        🏠 <span data-i18n="backToBoard">رجوع للسبورة</span>
+      </button>
+      <button id="appbar-lang" class="appbar-back" onclick="App.openLangPicker()">
+        🌐 <span id="appbar-lang-label">العربية</span>
       </button>
     </div>
   </header>
+
+  <div id="lang-modal" class="lang-modal">
+    <div class="lang-modal-card">
+      <div class="lang-modal-header">
+        <span data-i18n="chooseLanguage">اختر لغة الواجهة</span>
+        <button class="close-btn" onclick="App.closeLangPicker()">✕</button>
+      </div>
+      <div class="lang-grid" id="lang-grid"></div>
+      <p class="lang-note" data-i18n="languageNote">المحتوى التعليمي العربي (الحروف والقرآن) يبقى بالعربية دائماً — هذا يغيّر لغة الأيقونات والشرح فقط.</p>
+    </div>
+  </div>
 
   <main id="app-main">
 
@@ -517,16 +541,16 @@ button{font-family:inherit;}
         <input type="file" id="file-uploader" accept="image/png, image/jpeg, application/pdf" style="display:none;" onchange="Board.handleFileUpload(event)">
 
         <div class="toolbar unified-toolbar" id="unified-toolbar">
-          <span class="toolbar-grip" id="toolbar-grip" title="اسحب لنقل الشريط">⠿</span>
-          <button class="icon-btn" onclick="Board.openPanel('background')" data-title="خلفية السبورة">🖼️</button>
-          <button class="icon-btn" onclick="Board.openPanel('tashkeel')" data-title="التشكيل والمدود">🔤</button>
-          <button class="icon-btn" onclick="Board.openPanel('pens')" data-title="الأقلام والفرش">🖊️</button>
-          <button class="icon-btn" onclick="Board.openPanel('colors')" data-title="الألوان">🎨</button>
-          <button class="icon-btn color-upload" onclick="document.getElementById('file-uploader').click()" data-title="رفع صور وPDF">📤</button>
-          <button class="icon-btn" onclick="Board.startScreenShare()" data-title="مشاركة الشاشة">🖥️</button>
-          <button class="icon-btn color-tajweed" onclick="App.switchMode('mushaf')" data-title="مصحف التجويد">📖</button>
-          <button class="icon-btn color-games" onclick="App.switchMode('games')" data-title="ألعاب الذكاء">🧩</button>
-          <button class="icon-btn" onclick="Board.clearBoard()" data-title="الممحاة">🧹</button>
+          <span class="toolbar-grip" id="toolbar-grip" data-i18n-title="dragToolbar" data-title="اسحب لنقل الشريط">⠿</span>
+          <button class="icon-btn" onclick="Board.openPanel('background')" data-i18n-title="toolBg" data-title="خلفية السبورة">🖼️</button>
+          <button class="icon-btn" onclick="Board.openPanel('tashkeel')" data-i18n-title="toolTashkeel" data-title="التشكيل والمدود">🔤</button>
+          <button class="icon-btn" onclick="Board.openPanel('pens')" data-i18n-title="toolPens" data-title="الأقلام والفرش">🖊️</button>
+          <button class="icon-btn" onclick="Board.openPanel('colors')" data-i18n-title="toolColors" data-title="الألوان">🎨</button>
+          <button class="icon-btn color-upload" onclick="document.getElementById('file-uploader').click()" data-i18n-title="toolUpload" data-title="رفع صور وPDF">📤</button>
+          <button class="icon-btn" onclick="Board.startScreenShare()" data-i18n-title="toolShare" data-title="مشاركة الشاشة">🖥️</button>
+          <button class="icon-btn color-tajweed" onclick="App.switchMode('mushaf')" data-i18n-title="toolMushaf" data-title="مصحف التجويد">📖</button>
+          <button class="icon-btn color-games" onclick="App.switchMode('games')" data-i18n-title="toolGames" data-title="ألعاب الذكاء">🧩</button>
+          <button class="icon-btn" onclick="Board.clearBoard()" data-i18n-title="toolEraser" data-title="الممحاة">🧹</button>
         </div>
 
         <div id="side-panel">
@@ -545,48 +569,56 @@ button{font-family:inherit;}
       <div id="game-portal">
         <div id="menu-screen" class="screen active">
           <div class="menu-stats-row">
-            <div class="stat-box high-score">🏆 أعلى نتيجة: <span id="ui-highscore">0</span></div>
-            <div class="stat-box score">⭐ آخر نتيجة: <span id="ui-score">0</span></div>
+            <div class="stat-box high-score">🏆 <span data-i18n="highScore">أعلى نتيجة:</span> <span id="ui-highscore">0</span></div>
+            <div class="stat-box score">⭐ <span data-i18n="lastScore">آخر نتيجة:</span> <span id="ui-score">0</span></div>
           </div>
           <span id="ui-timer" style="display:none;">00:00</span>
           <div class="mascot-bubble">
             <span class="mascot-cat">🐱</span>
-            <div class="bubble-text">مرحباً أيها الأبطال! جاهزين نلعب ونتعلم سوا؟ 🌟</div>
+            <div class="bubble-text" data-i18n="mascotWelcome">مرحباً أيها الأبطال! جاهزين نلعب ونتعلم سوا؟ 🌟</div>
           </div>
-          <h1 style="color:var(--neon-yellow);">🎮 منصة ألعاب الذكاء</h1>
+          <h1 style="color:var(--neon-yellow);">🎮 <span data-i18n="gamesTitle">منصة ألعاب الذكاء</span></h1>
           <div class="games-grid">
-            <div class="game-card" onclick="Games.selectLevel(1)"><span class="g-emoji">⚽</span><span class="g-name">ملعب الحركات والمدود</span></div>
-            <div class="game-card" onclick="Games.selectLevel(2)"><span class="g-emoji">🔢</span><span class="g-name">توصيل النقاط</span></div>
-            <div class="game-card" onclick="Games.selectLevel(3)"><span class="g-emoji">🎣</span><span class="g-name">صيد الحروف المشكّلة</span></div>
-            <div class="game-card" onclick="Games.selectLevel(4)"><span class="g-emoji">🧩</span><span class="g-name">تركيب الكلمات</span></div>
-            <div class="game-card" onclick="Games.selectLevel(5)"><span class="g-emoji">🧠</span><span class="g-name">ذاكرة أحكام التجويد</span></div>
+            <div class="game-card" onclick="Games.selectLevel(1)"><span class="g-emoji">⚽</span><span class="g-name" data-i18n="game1Name">ملعب الحركات والمدود</span></div>
+            <div class="game-card" onclick="Games.selectLevel(2)"><span class="g-emoji">🔢</span><span class="g-name" data-i18n="game2Name">توصيل النقاط</span></div>
+            <div class="game-card" onclick="Games.selectLevel(3)"><span class="g-emoji">🎣</span><span class="g-name" data-i18n="game3Name">صيد الحروف المشكّلة</span></div>
+            <div class="game-card" onclick="Games.selectLevel(4)"><span class="g-emoji">🧩</span><span class="g-name" data-i18n="game4Name">تركيب الكلمات</span></div>
+            <div class="game-card" onclick="Games.selectLevel(5)"><span class="g-emoji">🧠</span><span class="g-name" data-i18n="game5Name">ذاكرة أحكام التجويد</span></div>
           </div>
         </div>
         <div id="praise-toast"></div>
 
         <div id="level-screen" class="screen">
-          <h1>اختر مستوى التحدي</h1>
+          <h1 data-i18n="chooseLevel">اختر مستوى التحدي</h1>
           <div class="level-cards">
             <div class="level-card easy" onclick="Games.startGame(1)">
-              <div class="lc-title">🟢 سهل</div><div class="lc-time">⏱️ 60 ثانية</div><div class="lc-points">حتى 5 نقاط</div>
+              <div class="lc-title">🟢 <span data-i18n="levelEasy">سهل</span></div>
+              <div class="lc-time">⏱️ 60 <span data-i18n="seconds">ثانية</span></div>
+              <div class="lc-points" data-i18n-tpl="upToPoints" data-tpl-n="5">حتى 5 نقاط</div>
             </div>
             <div class="level-card medium" onclick="Games.startGame(2)">
-              <div class="lc-title">🟡 متوسط</div><div class="lc-time">⏱️ 45 ثانية</div><div class="lc-points">حتى 12 نقطة</div>
+              <div class="lc-title">🟡 <span data-i18n="levelMedium">متوسط</span></div>
+              <div class="lc-time">⏱️ 45 <span data-i18n="seconds">ثانية</span></div>
+              <div class="lc-points" data-i18n-tpl="upToPoints" data-tpl-n="12">حتى 12 نقطة</div>
             </div>
             <div class="level-card hard" onclick="Games.startGame(3)">
-              <div class="lc-title">🔴 صعب</div><div class="lc-time">⏱️ 30 ثانية</div><div class="lc-points">حتى 25 نقطة</div>
+              <div class="lc-title">🔴 <span data-i18n="levelHard">صعب</span></div>
+              <div class="lc-time">⏱️ 30 <span data-i18n="seconds">ثانية</span></div>
+              <div class="lc-points" data-i18n-tpl="upToPoints" data-tpl-n="25">حتى 25 نقطة</div>
             </div>
           </div>
         </div>
 
         <div id="section-screen" class="screen">
-          <h1>اختر القسم</h1>
+          <h1 data-i18n="chooseSection">اختر القسم</h1>
           <div class="level-cards">
             <div class="level-card easy" onclick="Games.chooseSection('arabic')">
-              <div class="lc-title">🔤 اللغة العربية</div><div class="lc-time">حروف، حركات، مدود</div>
+              <div class="lc-title">🔤 <span data-i18n="sectionArabic">اللغة العربية</span></div>
+              <div class="lc-time" data-i18n="sectionArabicDesc">حروف، حركات، مدود</div>
             </div>
             <div class="level-card hard" onclick="Games.chooseSection('tajweed')">
-              <div class="lc-title">📗 التجويد</div><div class="lc-time">أحكام ومهارات متقدمة</div>
+              <div class="lc-title">📗 <span data-i18n="sectionTajweed">التجويد</span></div>
+              <div class="lc-time" data-i18n="sectionTajweedDesc">أحكام ومهارات متقدمة</div>
             </div>
           </div>
         </div>
@@ -595,12 +627,12 @@ button{font-family:inherit;}
           <div id="pitch">
             <div class="goal-row" id="goal-row"></div>
             <div id="ball-wrap"><div id="ball-letter"></div></div>
-            <div id="pitch-instruction">وجّه الكرة نحو المرمى الصحيح!</div>
+            <div id="pitch-instruction" data-i18n="pitchInstruction">وجّه الكرة نحو المرمى الصحيح!</div>
           </div>
         </div>
 
         <div id="game-2-screen" class="screen">
-          <div id="shape-reveal-label">وصّل النقاط بالترتيب 1، 2، 3...</div>
+          <div id="shape-reveal-label" data-i18n="connectDotsInstruction">وصّل النقاط بالترتيب 1، 2، 3...</div>
           <div class="idle-mascot" id="g2-mascot">🐱</div>
           <div id="dots-wrap">
             <canvas id="dots-canvas"></canvas>
@@ -623,11 +655,11 @@ button{font-family:inherit;}
         </div>
 
         <div id="game-4-screen" class="screen">
-          <h2 style="margin-bottom:14px;color:var(--neon-yellow);">احفظ الكلمة، ثم أعد ترتيبها:</h2>
+          <h2 style="margin-bottom:14px;color:var(--neon-yellow);" data-i18n="rememberWord">احفظ الكلمة، ثم أعد ترتيبها:</h2>
           <div id="word-preview"></div>
           <div class="drop-zone-container" id="drop-zone"></div>
           <div class="letters-container" id="drag-letters"></div>
-          <button id="hint-btn" onclick="Games.useHint()">💡 تلميح (-1 نقطة)</button>
+          <button id="hint-btn" onclick="Games.useHint()" data-i18n="hintBtn">💡 تلميح (-1 نقطة)</button>
         </div>
 
         <div id="game-5-screen" class="screen">
@@ -635,9 +667,9 @@ button{font-family:inherit;}
         </div>
 
         <div id="end-screen" class="screen">
-          <h1 id="end-msg">انتهى الوقت!</h1>
-          <h2 style="font-size:1.8rem;color:var(--neon-green);margin-bottom:20px;">نقاطك: <span id="end-score"></span></h2>
-          <button class="g-btn" onclick="Games.showScreen('menu-screen')">العودة للقائمة</button>
+          <h1 id="end-msg" data-i18n="timeUp">انتهى الوقت!</h1>
+          <h2 style="font-size:1.8rem;color:var(--neon-green);margin-bottom:20px;"><span data-i18n="yourScore">نقاطك:</span> <span id="end-score"></span></h2>
+          <button class="g-btn" onclick="Games.showScreen('menu-screen')" data-i18n="backToMenu">العودة للقائمة</button>
         </div>
       </div>
     </section>
@@ -646,23 +678,23 @@ button{font-family:inherit;}
     <section id="mode-mushaf" class="app-mode">
       <div id="mushaf-root">
         <div class="tabs-header">
-          <button class="md-tab-btn active" onclick="Mushaf.switchTab(this,'quran-tab')">📘 المصحف التفاعلي</button>
-          <button class="md-tab-btn" onclick="Mushaf.switchTab(this,'game-tab')">🎨 تحدي التلوين الذكي</button>
+          <button class="md-tab-btn active" onclick="Mushaf.switchTab(this,'quran-tab')">📘 <span data-i18n="tabQuran">المصحف التفاعلي</span></button>
+          <button class="md-tab-btn" onclick="Mushaf.switchTab(this,'game-tab')">🎨 <span data-i18n="tabColoring">تحدي التلوين الذكي</span></button>
         </div>
 
         <div id="quran-tab" class="md-tab-content active">
           <div class="surah-bar" id="surah-bar"></div>
           <div class="tajweed-legend">
-            <span><i class="legend-dot" style="background:var(--md-red);"></i> المدود</span>
-            <span><i class="legend-dot" style="background:var(--md-green);"></i> الإخفاء والإدغام</span>
-            <span><i class="legend-dot" style="background:var(--md-blue);"></i> القلقلة</span>
+            <span><i class="legend-dot" style="background:var(--md-red);"></i> <span data-i18n="legendMadd">المدود</span></span>
+            <span><i class="legend-dot" style="background:var(--md-green);"></i> <span data-i18n="legendIkhfa">الإخفاء والإدغام</span></span>
+            <span><i class="legend-dot" style="background:var(--md-blue);"></i> <span data-i18n="legendQalqalah">القلقلة</span></span>
           </div>
           <div class="quran-container" id="quran-display"></div>
-          <p class="tts-note">🔊 النطق الصوتي آلي (تحويل نص إلى كلام من المتصفح) وليس تلاوة قارئ معتمد — مخصص للمساعدة على التعرف على مخارج الحروف فقط.</p>
+          <p class="tts-note" data-i18n="ttsNote">🔊 النطق الصوتي آلي (تحويل نص إلى كلام من المتصفح) وليس تلاوة قارئ معتمد — مخصص للمساعدة على التعرف على مخارج الحروف فقط.</p>
           <div class="explanation-panel" id="exp-panel">
             <span id="exp-icon" style="font-size:1.8rem;">💡</span>
-            <div id="exp-text">اختر آية لترى شرح التجويد.</div>
-            <button id="tts-btn" onclick="Mushaf.speakActive()" title="استماع للنطق الآلي">🔊</button>
+            <div id="exp-text" data-i18n="chooseAyahPrompt">اختر آية لترى شرح التجويد.</div>
+            <button id="tts-btn" onclick="Mushaf.speakActive()" data-i18n-title="ttsButtonTitle" data-title="استماع للنطق الآلي" title="استماع للنطق الآلي">🔊</button>
           </div>
         </div>
 
@@ -670,14 +702,14 @@ button{font-family:inherit;}
           <div class="coloring-game">
             <div class="md-level-bar" id="md-level-bar"></div>
             <div class="md-game-header">
-              <div id="game-question">ابحث عن: <strong style="color:var(--md-red);">حرف ممدود</strong> ولونه!</div>
-              <div style="color:var(--md-green);">النقاط: <span id="mushaf-score">0</span></div>
+              <div id="game-question"><span data-i18n="searchFor">ابحث عن:</span> <strong style="color:var(--md-red);" data-i18n="maddedLetter">حرف ممدود</strong> <span data-i18n="colorIt">ولونه!</span></div>
+              <div style="color:var(--md-green);"><span data-i18n="pointsLabel">النقاط:</span> <span id="mushaf-score">0</span></div>
             </div>
             <div class="hollow-text-container" id="hollow-board"></div>
             <div class="pens-palette">
-              <div class="md-pen pen-red active-pen" onclick="Mushaf.selectPen(this,'red')" title="قلم المدود">🖌️</div>
-              <div class="md-pen pen-green" onclick="Mushaf.selectPen(this,'green')" title="قلم الإخفاء والإدغام">🖌️</div>
-              <div class="md-pen pen-blue" onclick="Mushaf.selectPen(this,'blue')" title="قلم القلقلة">🖌️</div>
+              <div class="md-pen pen-red active-pen" onclick="Mushaf.selectPen(this,'red')" data-i18n-title="penMaddTitle" data-title="قلم المدود" title="قلم المدود">🖌️</div>
+              <div class="md-pen pen-green" onclick="Mushaf.selectPen(this,'green')" data-i18n-title="penIkhfaTitle" data-title="قلم الإخفاء والإدغام" title="قلم الإخفاء والإدغام">🖌️</div>
+              <div class="md-pen pen-blue" onclick="Mushaf.selectPen(this,'blue')" data-i18n-title="penQalqalahTitle" data-title="قلم القلقلة" title="قلم القلقلة">🖌️</div>
             </div>
           </div>
         </div>
@@ -704,8 +736,321 @@ const Persist = {
   async setNumber(key, value){
     try{ await window.storage.set(key, String(value), false); }
     catch(e){ /* تجاهل بصمت: التخزين غير متاح، لكن اللعبة تستمر بالجلسة الحالية */ }
+  },
+  async getString(key, fallback){
+    try{
+      const res = await window.storage.get(key, false);
+      return (res && typeof res.value === 'string') ? res.value : fallback;
+    }catch(e){ return fallback; }
+  },
+  async setString(key, value){
+    try{ await window.storage.set(key, String(value), false); }
+    catch(e){ /* تجاهل بصمت */ }
   }
 };
+
+/* ========================================================
+   نظام تعدد اللغات: يترجم واجهة الاستخدام فقط (الأزرار، القوائم،
+   الشرح) — المحتوى التعليمي العربي (الحروف، الحركات، القرآن) يبقى
+   عربياً دائماً بغض النظر عن لغة الواجهة.
+   ======================================================== */
+const LANGS = {
+  ar: { dir:'rtl', label:'العربية' },
+  en: { dir:'ltr', label:'English' },
+  tr: { dir:'ltr', label:'Türkçe' },
+  ru: { dir:'ltr', label:'Русский' },
+  zh: { dir:'ltr', label:'中文' },
+  hi: { dir:'ltr', label:'हिन्दी' },
+  ur: { dir:'rtl', label:'اردو' },
+  fa: { dir:'rtl', label:'فارسی' }
+};
+
+const I18N = {
+ar:{
+  backToBoard:'رجوع للسبورة', gamesMenuBtn:'قائمة الألعاب', dragToolbar:'اسحب لنقل الشريط',
+  toolBg:'خلفية السبورة', toolTashkeel:'التشكيل والمدود', toolPens:'الأقلام والفرش', toolColors:'الألوان',
+  toolUpload:'رفع صور وPDF', toolShare:'مشاركة الشاشة', toolMushaf:'مصحف التجويد', toolGames:'ألعاب الذكاء', toolEraser:'الممحاة',
+  bgPanelDesc:'اختر شكل ولون خلفية السبورة:', bgWhite:'أبيض', bgGrid:'شبكة', bgLines:'أسطر', bgDark:'داكن',
+  bgBlue:'أزرق فاتح', bgYellow:'أصفر فاتح', bgGreen:'أخضر فاتح', bgPink:'وردي فاتح', bgPurple:'بنفسجي فاتح',
+  tashkeelDesc:'اضغط على الحركة لإضافتها في مكان وقوف المؤشر:',
+  markFatha:'فَتْحَة', markTanweenFath:'تنوين فتح', markDamma:'ضَمَّة', markTanweenDamm:'تنوين ضم',
+  markKasra:'كَسْرَة', markTanweenKasr:'تنوين كسر', markSukun:'سُكُون', markShadda:'شَدَّة',
+  markDaggerAlif:'ألف خنجرية', markMadd:'مدّ', zoneMaddAlif:'مد بالألف', zoneMaddWaw:'مد بالواو', zoneMaddYaa:'مد بالياء',
+  pensChooseTool:'اختر الأداة:', toolWrite:'كتابة', toolInk:'حبر عربي', toolNeon:'نيون متوهج',
+  toolHighlighter:'هايلايتر', toolSmartEraser:'ممحاة ذكية', thicknessLabel:'سماكة الخط:',
+  colorPaletteLabel:'لوحة الألوان:', writeDrawNote:'يمكنك الكتابة والرسم معاً على نفس السبورة.',
+  confirmClearBoard:'هل أنت متأكد من مسح السبورة بالكامل؟', unsupportedFile:'صيغة الملف غير مدعومة! الرجاء اختيار صورة أو ملف PDF.',
+  mascotWelcome:'مرحباً أيها الأبطال! جاهزين نلعب ونتعلم سوا؟ 🌟', gamesTitle:'منصة ألعاب الذكاء',
+  lastScore:'آخر نتيجة:', highScore:'أعلى نتيجة:',
+  game1Name:'ملعب الحركات والمدود', game2Name:'توصيل النقاط', game3Name:'صيد الحروف المشكّلة',
+  game4Name:'تركيب الكلمات', game5Name:'ذاكرة أحكام التجويد',
+  chooseLevel:'اختر مستوى التحدي', levelEasy:'سهل', levelMedium:'متوسط', levelHard:'صعب',
+  seconds:'ثانية', upToPoints:'حتى {n} نقاط',
+  chooseSection:'اختر القسم', sectionArabic:'اللغة العربية', sectionArabicDesc:'حروف، حركات، مدود',
+  sectionTajweed:'التجويد', sectionTajweedDesc:'أحكام ومهارات متقدمة',
+  pitchInstruction:'وجّه الكرة نحو المرمى الصحيح!',
+  connectDotsInstruction:'وصّل النقاط بالترتيب 1، 2، 3...', wellDone:'أحسنت! 🎉',
+  rememberWord:'احفظ الكلمة، ثم أعد ترتيبها:', hintBtn:'💡 تلميح (-1 نقطة)',
+  timeUp:'انتهى الوقت!', newRecord:'رقم قياسي جديد! 🎉', yourScore:'نقاطك:', backToMenu:'العودة للقائمة',
+  tabQuran:'📘 المصحف التفاعلي', tabColoring:'🎨 تحدي التلوين الذكي',
+  legendMadd:'المدود', legendIkhfa:'الإخفاء والإدغام', legendQalqalah:'القلقلة',
+  ttsNote:'🔊 النطق الصوتي آلي (تحويل نص إلى كلام من المتصفح) وليس تلاوة قارئ معتمد — مخصص للمساعدة على التعرف على مخارج الحروف فقط.',
+  chooseAyahPrompt:'اختر آية لترى شرح التجويد.', ttsButtonTitle:'استماع للنطق الآلي',
+  penMaddTitle:'قلم المدود', penIkhfaTitle:'قلم الإخفاء والإدغام', penQalqalahTitle:'قلم القلقلة',
+  pointsLabel:'النقاط:', searchFor:'ابحث عن:', colorIt:'ولونه!', maddedLetter:'حرف ممدود', mCatchLetter:'اصطد الحرف: {x} (بدون حركة)', mCatchLetterHarakah:'اصطد الحرف بحركته: {x}', mCatchMarked:'اصطد كل حرف عليه {x}', mCatchSukun:'اصطد كل حرف عليه سكون', mCatchMaddNatural:'اصطد المد الطبيعي (مثل: با، بُو) وتجنّب الحركة القصيرة', mCatchMaddSpecific:'اصطد كل حرف فيه {x} تحديداً', mCatchQalqalah:'اصطد حروف القلقلة الساكنة فقط: ق ط ب ج د', mCatchMeemSakinah:'اصطد الكلمات التي فيها ميم ساكنة', mCatchNoonTanween:'اصطد الكلمات التي فيها نون ساكنة أو تنوين', mCatchTafkhim:'اصطد الحروف المفخّمة (الثقيلة): خ ص ض ط ظ غ ق', mCatchLaamShamsi:'اصطد الكلمات التي فيها لام شمسية (تُدغم ولا تُنطق)', mCatchRaaHeavy:'اصطد الكلمات التي فيها راء مفخّمة (بعد فتح أو ضم)', mCatchQalqalahWord:'اصطد الكلمات التي فيها قلقلة داخل الكلمة', mCatchNoonMeemWord:'اصطد الكلمات التي فيها نون أو ميم ساكنة', mCatchTafkhimWord:'اصطد الكلمات التي فيها حرف مفخّم (خ ص ض ط ظ غ ق)', qIkhfaRule:'حكم إخفاء', qIdghamRule:'حكم إدغام', qQalqalahLetter:'حرف قلقلة', ayahLabel:'آية',
+  chooseLanguage:'اختر لغة الواجهة', languageNote:'المحتوى التعليمي العربي (الحروف والقرآن) يبقى بالعربية دائماً — هذا يغيّر لغة الأيقونات والشرح فقط.'
+},
+en:{
+  backToBoard:'Back to Board', gamesMenuBtn:'Games Menu', dragToolbar:'Drag to move toolbar',
+  toolBg:'Board Background', toolTashkeel:'Diacritics & Madd', toolPens:'Pens & Brushes', toolColors:'Colors',
+  toolUpload:'Upload Image/PDF', toolShare:'Share Screen', toolMushaf:'Tajweed Mushaf', toolGames:'Smart Games', toolEraser:'Eraser',
+  bgPanelDesc:'Choose the board background style and color:', bgWhite:'White', bgGrid:'Grid', bgLines:'Ruled Lines', bgDark:'Dark',
+  bgBlue:'Light Blue', bgYellow:'Light Yellow', bgGreen:'Light Green', bgPink:'Light Pink', bgPurple:'Light Purple',
+  tashkeelDesc:'Tap a diacritic to insert it at the cursor position:',
+  markFatha:'Fatha', markTanweenFath:'Tanween Fath', markDamma:'Damma', markTanweenDamm:'Tanween Damm',
+  markKasra:'Kasra', markTanweenKasr:'Tanween Kasr', markSukun:'Sukun', markShadda:'Shadda',
+  markDaggerAlif:'Dagger Alif', markMadd:'Madd', zoneMaddAlif:'Madd with Alif', zoneMaddWaw:'Madd with Waw', zoneMaddYaa:'Madd with Ya',
+  pensChooseTool:'Choose a tool:', toolWrite:'Write', toolInk:'Arabic Ink Pen', toolNeon:'Glowing Neon Brush',
+  toolHighlighter:'Highlighter', toolSmartEraser:'Smart Eraser', thicknessLabel:'Line thickness:',
+  colorPaletteLabel:'Color palette:', writeDrawNote:'You can write and draw together on the same board.',
+  confirmClearBoard:'Are you sure you want to clear the whole board?', unsupportedFile:'Unsupported file type! Please choose an image or a PDF.',
+  mascotWelcome:'Welcome, champions! Ready to play and learn together? 🌟', gamesTitle:'Smart Games Platform',
+  lastScore:'Last score:', highScore:'High score:',
+  game1Name:'Harakat & Madd Pitch', game2Name:'Connect the Dots', game3Name:'Catch the Letters',
+  game4Name:'Word Builder', game5Name:'Tajweed Memory',
+  chooseLevel:'Choose Your Level', levelEasy:'Easy', levelMedium:'Medium', levelHard:'Hard',
+  seconds:'seconds', upToPoints:'Up to {n} points',
+  chooseSection:'Choose a Section', sectionArabic:'Arabic Language', sectionArabicDesc:'Letters, harakat, madd',
+  sectionTajweed:'Tajweed', sectionTajweedDesc:'Advanced rules & skills',
+  pitchInstruction:'Aim the ball at the correct goal!',
+  connectDotsInstruction:'Connect the dots in order 1, 2, 3...', wellDone:'Well done! 🎉',
+  rememberWord:'Remember the word, then rebuild it:', hintBtn:'💡 Hint (-1 point)',
+  timeUp:'Time is up!', newRecord:'New high score! 🎉', yourScore:'Your score:', backToMenu:'Back to Menu',
+  tabQuran:'📘 Interactive Mushaf', tabColoring:'🎨 Smart Coloring Challenge',
+  legendMadd:'Madd', legendIkhfa:'Ikhfa & Idgham', legendQalqalah:'Qalqalah',
+  ttsNote:'🔊 The pronunciation is automatic browser text-to-speech, not a certified reciter — meant only to help with letter articulation.',
+  chooseAyahPrompt:'Choose a verse to see its tajweed explanation.', ttsButtonTitle:'Listen to automatic pronunciation',
+  penMaddTitle:'Madd pen', penIkhfaTitle:'Ikhfa/Idgham pen', penQalqalahTitle:'Qalqalah pen',
+  pointsLabel:'Points:', searchFor:'Find:', colorIt:'and color it!', maddedLetter:'an elongated (madd) letter', mCatchLetter:'Catch the letter: {x} (no vowel mark)', mCatchLetterHarakah:'Catch the letter with its mark: {x}', mCatchMarked:'Catch every letter with {x}', mCatchSukun:'Catch every letter with a sukun', mCatchMaddNatural:'Catch the natural madd (like: baa, boo) and avoid the short vowel', mCatchMaddSpecific:'Catch every letter with {x} specifically', mCatchQalqalah:'Catch only the qalqalah letters with sukun: q t b j d', mCatchMeemSakinah:'Catch the words containing a silent meem', mCatchNoonTanween:'Catch the words containing a silent noon or tanween', mCatchTafkhim:'Catch the emphatic (heavy) letters', mCatchLaamShamsi:'Catch the words with a sun-lam (silent, assimilated)', mCatchRaaHeavy:'Catch the words with an emphatic raa (after fatha/damma)', mCatchQalqalahWord:'Catch the words containing qalqalah', mCatchNoonMeemWord:'Catch the words containing a silent noon or meem', mCatchTafkhimWord:'Catch the words containing an emphatic letter', qIkhfaRule:'an ikhfa case', qIdghamRule:'an idgham case', qQalqalahLetter:'a qalqalah letter', ayahLabel:'Verse',
+  chooseLanguage:'Choose interface language', languageNote:'The Arabic learning content (letters and Quran) always stays in Arabic — this only changes the icons and explanations.'
+},
+tr:{
+  backToBoard:'Panoya Dön', gamesMenuBtn:'Oyun Menüsü', dragToolbar:'Araç çubuğunu taşımak için sürükleyin',
+  toolBg:'Pano Arka Planı', toolTashkeel:'Harekeler ve Med', toolPens:'Kalemler ve Fırçalar', toolColors:'Renkler',
+  toolUpload:'Resim/PDF Yükle', toolShare:'Ekranı Paylaş', toolMushaf:'Tecvid Mushaf', toolGames:'Zeka Oyunları', toolEraser:'Silgi',
+  bgPanelDesc:'Pano arka plan şeklini ve rengini seçin:', bgWhite:'Beyaz', bgGrid:'Kareli', bgLines:'Çizgili', bgDark:'Koyu',
+  bgBlue:'Açık Mavi', bgYellow:'Açık Sarı', bgGreen:'Açık Yeşil', bgPink:'Açık Pembe', bgPurple:'Açık Mor',
+  tashkeelDesc:'İmlecin bulunduğu yere eklemek için bir hareke seçin:',
+  markFatha:'Fetha', markTanweenFath:'Tenvin-i Fetha', markDamma:'Damme', markTanweenDamm:'Tenvin-i Damme',
+  markKasra:'Kesra', markTanweenKasr:'Tenvin-i Kesra', markSukun:'Sükun', markShadda:'Şedde',
+  markDaggerAlif:'Hançer Elif', markMadd:'Med', zoneMaddAlif:'Elif ile Med', zoneMaddWaw:'Vav ile Med', zoneMaddYaa:'Ya ile Med',
+  pensChooseTool:'Bir araç seçin:', toolWrite:'Yazı', toolInk:'Arapça Mürekkep Kalem', toolNeon:'Parlayan Neon Fırça',
+  toolHighlighter:'Fosforlu Kalem', toolSmartEraser:'Akıllı Silgi', thicknessLabel:'Çizgi kalınlığı:',
+  colorPaletteLabel:'Renk paleti:', writeDrawNote:'Aynı panoda hem yazabilir hem çizebilirsiniz.',
+  confirmClearBoard:'Panoyu tamamen silmek istediğinize emin misiniz?', unsupportedFile:'Desteklenmeyen dosya türü! Lütfen bir resim veya PDF seçin.',
+  mascotWelcome:'Hoş geldiniz kahramanlar! Oynamaya ve öğrenmeye hazır mısınız? 🌟', gamesTitle:'Zeka Oyunları Platformu',
+  lastScore:'Son puan:', highScore:'En yüksek puan:',
+  game1Name:'Hareke ve Med Sahası', game2Name:'Noktaları Birleştir', game3Name:'Harfleri Yakala',
+  game4Name:'Kelime Kur', game5Name:'Tecvid Hafızası',
+  chooseLevel:'Seviyenizi Seçin', levelEasy:'Kolay', levelMedium:'Orta', levelHard:'Zor',
+  seconds:'saniye', upToPoints:'{n} puana kadar',
+  chooseSection:'Bir Bölüm Seçin', sectionArabic:'Arapça', sectionArabicDesc:'Harfler, harekeler, med',
+  sectionTajweed:'Tecvid', sectionTajweedDesc:'İleri düzey kurallar ve beceriler',
+  pitchInstruction:'Topu doğru kaleye yönlendir!',
+  connectDotsInstruction:'Noktaları 1, 2, 3... sırasıyla birleştirin', wellDone:'Aferin! 🎉',
+  rememberWord:'Kelimeyi ezberle, sonra yeniden kur:', hintBtn:'💡 İpucu (-1 puan)',
+  timeUp:'Süre doldu!', newRecord:'Yeni rekor! 🎉', yourScore:'Puanınız:', backToMenu:'Menüye Dön',
+  tabQuran:'📘 Etkileşimli Mushaf', tabColoring:'🎨 Akıllı Boyama Yarışması',
+  legendMadd:'Med', legendIkhfa:'İhfa ve İdgam', legendQalqalah:'Kalkale',
+  ttsNote:'🔊 Telaffuz, tarayıcının otomatik metin-konuşma özelliğidir, onaylı bir hafızın okuyuşu değildir — yalnızca harf mahreçlerini tanımaya yardımcı olmak içindir.',
+  chooseAyahPrompt:'Tecvid açıklamasını görmek için bir ayet seçin.', ttsButtonTitle:'Otomatik telaffuzu dinle',
+  penMaddTitle:'Med kalemi', penIkhfaTitle:'İhfa/İdgam kalemi', penQalqalahTitle:'Kalkale kalemi',
+  pointsLabel:'Puan:', searchFor:'Bul:', colorIt:'ve boya!', maddedLetter:'uzatma (med) harfi', mCatchLetter:'Harfi yakala: {x} (harekesiz)', mCatchLetterHarakah:'Harfi harekesiyle yakala: {x}', mCatchMarked:'{x} olan her harfi yakala', mCatchSukun:'Sükunlu her harfi yakala', mCatchMaddNatural:'Doğal med\'i yakala (baa, boo gibi) kısa hareke\'den kaçın', mCatchMaddSpecific:'Özellikle {x} olan her harfi yakala', mCatchQalqalah:'Yalnızca sakin kalkale harflerini yakala: k t b c d', mCatchMeemSakinah:'Sakin mim içeren kelimeleri yakala', mCatchNoonTanween:'Sakin nun veya tenvin içeren kelimeleri yakala', mCatchTafkhim:'Kalın (tafhim) harfleri yakala', mCatchLaamShamsi:'Şemsi lam içeren (okunmayan) kelimeleri yakala', mCatchRaaHeavy:'Kalın okunan ra içeren kelimeleri yakala', mCatchQalqalahWord:'İçinde kalkale olan kelimeleri yakala', mCatchNoonMeemWord:'Sakin nun veya mim içeren kelimeleri yakala', mCatchTafkhimWord:'Kalın harf içeren kelimeleri yakala', qIkhfaRule:'ihfa hükmü', qIdghamRule:'idgam hükmü', qQalqalahLetter:'kalkale harfi', ayahLabel:'Ayet',
+  chooseLanguage:'Arayüz dilini seçin', languageNote:'Arapça öğrenme içeriği (harfler ve Kuran) her zaman Arapça kalır — bu yalnızca simgeleri ve açıklamaları değiştirir.'
+},
+ru:{
+  backToBoard:'Назад к доске', gamesMenuBtn:'Меню игр', dragToolbar:'Перетащите, чтобы переместить панель',
+  toolBg:'Фон доски', toolTashkeel:'Огласовки и мадд', toolPens:'Ручки и кисти', toolColors:'Цвета',
+  toolUpload:'Загрузить изображение/PDF', toolShare:'Демонстрация экрана', toolMushaf:'Таджвид Мусхаф', toolGames:'Развивающие игры', toolEraser:'Ластик',
+  bgPanelDesc:'Выберите стиль и цвет фона доски:', bgWhite:'Белый', bgGrid:'Сетка', bgLines:'Линии', bgDark:'Тёмный',
+  bgBlue:'Светло-голубой', bgYellow:'Светло-жёлтый', bgGreen:'Светло-зелёный', bgPink:'Светло-розовый', bgPurple:'Светло-фиолетовый',
+  tashkeelDesc:'Нажмите на огласовку, чтобы вставить её в позицию курсора:',
+  markFatha:'Фатха', markTanweenFath:'Танвин фатха', markDamma:'Дамма', markTanweenDamm:'Танвин дамма',
+  markKasra:'Кясра', markTanweenKasr:'Танвин кясра', markSukun:'Сукун', markShadda:'Шадда',
+  markDaggerAlif:'Кинжальный алиф', markMadd:'Мадд', zoneMaddAlif:'Мадд с алифом', zoneMaddWaw:'Мадд с вав', zoneMaddYaa:'Мадд с йа',
+  pensChooseTool:'Выберите инструмент:', toolWrite:'Письмо', toolInk:'Арабское перо', toolNeon:'Неоновая кисть',
+  toolHighlighter:'Маркер', toolSmartEraser:'Умный ластик', thicknessLabel:'Толщина линии:',
+  colorPaletteLabel:'Палитра цветов:', writeDrawNote:'Вы можете писать и рисовать одновременно на одной доске.',
+  confirmClearBoard:'Вы уверены, что хотите полностью очистить доску?', unsupportedFile:'Неподдерживаемый формат файла! Выберите изображение или PDF.',
+  mascotWelcome:'Добро пожаловать, чемпионы! Готовы играть и учиться вместе? 🌟', gamesTitle:'Платформа развивающих игр',
+  lastScore:'Последний результат:', highScore:'Лучший результат:',
+  game1Name:'Поле огласовок и мадда', game2Name:'Соедини точки', game3Name:'Поймай буквы',
+  game4Name:'Собери слово', game5Name:'Память по таджвиду',
+  chooseLevel:'Выберите уровень', levelEasy:'Лёгкий', levelMedium:'Средний', levelHard:'Сложный',
+  seconds:'секунд', upToPoints:'До {n} очков',
+  chooseSection:'Выберите раздел', sectionArabic:'Арабский язык', sectionArabicDesc:'Буквы, огласовки, мадд',
+  sectionTajweed:'Таджвид', sectionTajweedDesc:'Продвинутые правила и навыки',
+  pitchInstruction:'Направь мяч в правильные ворота!',
+  connectDotsInstruction:'Соединяйте точки по порядку 1, 2, 3...', wellDone:'Молодец! 🎉',
+  rememberWord:'Запомни слово, затем собери его заново:', hintBtn:'💡 Подсказка (-1 балл)',
+  timeUp:'Время вышло!', newRecord:'Новый рекорд! 🎉', yourScore:'Ваш результат:', backToMenu:'Вернуться в меню',
+  tabQuran:'📘 Интерактивный Мусхаф', tabColoring:'🎨 Умная раскраска',
+  legendMadd:'Мадд', legendIkhfa:'Ихфа и идгам', legendQalqalah:'Калькаля',
+  ttsNote:'🔊 Произношение — это автоматический синтез речи браузера, а не чтение сертифицированного чтеца — предназначено только для помощи в артикуляции букв.',
+  chooseAyahPrompt:'Выберите аят, чтобы увидеть объяснение таджвида.', ttsButtonTitle:'Прослушать автоматическое произношение',
+  penMaddTitle:'Ручка мадда', penIkhfaTitle:'Ручка ихфа/идгам', penQalqalahTitle:'Ручка калькаля',
+  pointsLabel:'Очки:', searchFor:'Найди:', colorIt:'и раскрась!', maddedLetter:'букву с маддом (удлинением)', mCatchLetter:'Поймай букву: {x} (без огласовки)', mCatchLetterHarakah:'Поймай букву с огласовкой: {x}', mCatchMarked:'Поймай каждую букву с {x}', mCatchSukun:'Поймай каждую букву с сукуном', mCatchMaddNatural:'Поймай естественный мадд (например: баа, буу), избегай краткой огласовки', mCatchMaddSpecific:'Поймай каждую букву именно с {x}', mCatchQalqalah:'Поймай только буквы калькаля с сукуном: к т б дж д', mCatchMeemSakinah:'Поймай слова с немой мим', mCatchNoonTanween:'Поймай слова с немым нун или танвином', mCatchTafkhim:'Поймай тяжёлые (эмфатические) буквы', mCatchLaamShamsi:'Поймай слова с солнечным лям (не произносится)', mCatchRaaHeavy:'Поймай слова с тяжёлым ра (после фатхи/даммы)', mCatchQalqalahWord:'Поймай слова, содержащие калькаля', mCatchNoonMeemWord:'Поймай слова с немым нун или мим', mCatchTafkhimWord:'Поймай слова с тяжёлой буквой', qIkhfaRule:'случай ихфа', qIdghamRule:'случай идгам', qQalqalahLetter:'букву калькаля', ayahLabel:'Аят',
+  chooseLanguage:'Выберите язык интерфейса', languageNote:'Арабский учебный контент (буквы и Коран) всегда остаётся на арабском — это меняет только значки и пояснения.'
+},
+zh:{
+  backToBoard:'返回白板', gamesMenuBtn:'游戏菜单', dragToolbar:'拖动以移动工具栏',
+  toolBg:'白板背景', toolTashkeel:'元音符号与延长音', toolPens:'笔刷工具', toolColors:'颜色',
+  toolUpload:'上传图片/PDF', toolShare:'共享屏幕', toolMushaf:'塔吉维德古兰经', toolGames:'益智游戏', toolEraser:'橡皮擦',
+  bgPanelDesc:'选择白板背景样式和颜色：', bgWhite:'白色', bgGrid:'网格', bgLines:'横线', bgDark:'深色',
+  bgBlue:'浅蓝色', bgYellow:'浅黄色', bgGreen:'浅绿色', bgPink:'浅粉色', bgPurple:'浅紫色',
+  tashkeelDesc:'点击一个符号以插入到光标位置：',
+  markFatha:'法特哈（开口符）', markTanweenFath:'开口符双元音', markDamma:'达马（合口符）', markTanweenDamm:'合口符双元音',
+  markKasra:'克斯拉（齐齿符）', markTanweenKasr:'齐齿符双元音', markSukun:'苏孔（静符）', markShadda:'重叠符',
+  markDaggerAlif:'短剑阿列夫', markMadd:'延长音', zoneMaddAlif:'阿列夫延长音', zoneMaddWaw:'瓦五延长音', zoneMaddYaa:'亚延长音',
+  pensChooseTool:'选择工具：', toolWrite:'书写', toolInk:'阿拉伯墨水笔', toolNeon:'发光霓虹笔刷',
+  toolHighlighter:'荧光笔', toolSmartEraser:'智能橡皮擦', thicknessLabel:'线条粗细：',
+  colorPaletteLabel:'调色板：', writeDrawNote:'您可以在同一白板上同时书写和绘画。',
+  confirmClearBoard:'确定要清空整个白板吗？', unsupportedFile:'不支持的文件格式！请选择图片或PDF文件。',
+  mascotWelcome:'欢迎各位小英雄！准备好一起玩耍学习了吗？🌟', gamesTitle:'益智游戏平台',
+  lastScore:'上次得分：', highScore:'最高分：',
+  game1Name:'元音与延长音球场', game2Name:'连点成画', game3Name:'捕捉字母',
+  game4Name:'组词游戏', game5Name:'塔吉维德记忆卡',
+  chooseLevel:'选择挑战难度', levelEasy:'简单', levelMedium:'中等', levelHard:'困难',
+  seconds:'秒', upToPoints:'最多{n}分',
+  chooseSection:'选择部分', sectionArabic:'阿拉伯语', sectionArabicDesc:'字母、元音符号、延长音',
+  sectionTajweed:'塔吉维德（诵读规则）', sectionTajweedDesc:'高级规则与技巧',
+  pitchInstruction:'把球射向正确的球门！',
+  connectDotsInstruction:'按顺序1、2、3...连接圆点', wellDone:'做得好！🎉',
+  rememberWord:'记住这个词，然后重新拼出来：', hintBtn:'💡 提示（-1分）',
+  timeUp:'时间到！', newRecord:'创造新纪录！🎉', yourScore:'你的得分：', backToMenu:'返回菜单',
+  tabQuran:'📘 互动古兰经', tabColoring:'🎨 智能填色挑战',
+  legendMadd:'延长音', legendIkhfa:'隐音与同化音', legendQalqalah:'弹音',
+  ttsNote:'🔊 发音是浏览器自动生成的语音，并非认证诵读者的朗诵——仅用于帮助识别发音部位。',
+  chooseAyahPrompt:'选择一节经文以查看其诵读规则说明。', ttsButtonTitle:'听自动发音',
+  penMaddTitle:'延长音笔', penIkhfaTitle:'隐音/同化音笔', penQalqalahTitle:'弹音笔',
+  pointsLabel:'得分：', searchFor:'寻找：', colorIt:'并给它上色！', maddedLetter:'延长音字母', mCatchLetter:'捕捉字母：{x}（无元音符号）', mCatchLetterHarakah:'捕捉带符号的字母：{x}', mCatchMarked:'捕捉所有带{x}的字母', mCatchSukun:'捕捉所有带静符的字母', mCatchMaddNatural:'捕捉自然延长音（如：baa、boo）避开短元音', mCatchMaddSpecific:'专门捕捉带{x}的字母', mCatchQalqalah:'只捕捉带静符的弹音字母：q t b j d', mCatchMeemSakinah:'捕捉含静默米姆的单词', mCatchNoonTanween:'捕捉含静默努恩或双元音的单词', mCatchTafkhim:'捕捉重读（浓厚）字母', mCatchLaamShamsi:'捕捉含太阳拉姆（不发音）的单词', mCatchRaaHeavy:'捕捉含重读拉字母的单词', mCatchQalqalahWord:'捕捉含弹音的单词', mCatchNoonMeemWord:'捕捉含静默努恩或米姆的单词', mCatchTafkhimWord:'捕捉含重读字母的单词', qIkhfaRule:'隐音规则', qIdghamRule:'同化音规则', qQalqalahLetter:'弹音字母', ayahLabel:'经文',
+  chooseLanguage:'选择界面语言', languageNote:'阿拉伯语学习内容（字母和古兰经）始终保持阿拉伯语——此设置仅更改图标和说明文字。'
+},
+hi:{
+  backToBoard:'बोर्ड पर वापस जाएँ', gamesMenuBtn:'गेम मेनू', dragToolbar:'टूलबार हिलाने के लिए खींचें',
+  toolBg:'बोर्ड पृष्ठभूमि', toolTashkeel:'हरकात और मद्द', toolPens:'पेन और ब्रश', toolColors:'रंग',
+  toolUpload:'छवि/PDF अपलोड करें', toolShare:'स्क्रीन साझा करें', toolMushaf:'तजवीद मुसहफ', toolGames:'बुद्धि खेल', toolEraser:'इरेज़र',
+  bgPanelDesc:'बोर्ड की पृष्ठभूमि शैली और रंग चुनें:', bgWhite:'सफ़ेद', bgGrid:'ग्रिड', bgLines:'लाइनें', bgDark:'गहरा',
+  bgBlue:'हल्का नीला', bgYellow:'हल्का पीला', bgGreen:'हल्का हरा', bgPink:'हल्का गुलाबी', bgPurple:'हल्का बैंगनी',
+  tashkeelDesc:'कर्सर की स्थिति पर जोड़ने के लिए एक हरकत दबाएँ:',
+  markFatha:'फ़तहा', markTanweenFath:'तनवीन फ़तह', markDamma:'दम्मा', markTanweenDamm:'तनवीन दम्म',
+  markKasra:'कस्रा', markTanweenKasr:'तनवीन कस्र', markSukun:'सुकून', markShadda:'शद्दा',
+  markDaggerAlif:'खंजर अलिफ़', markMadd:'मद्द', zoneMaddAlif:'अलिफ़ से मद्द', zoneMaddWaw:'वाव से मद्द', zoneMaddYaa:'या से मद्द',
+  pensChooseTool:'एक उपकरण चुनें:', toolWrite:'लिखना', toolInk:'अरबी स्याही पेन', toolNeon:'चमकता नियॉन ब्रश',
+  toolHighlighter:'हाइलाइटर', toolSmartEraser:'स्मार्ट इरेज़र', thicknessLabel:'रेखा मोटाई:',
+  colorPaletteLabel:'रंग पैलेट:', writeDrawNote:'आप एक ही बोर्ड पर लिख और चित्र दोनों बना सकते हैं।',
+  confirmClearBoard:'क्या आप पूरा बोर्ड साफ़ करना चाहते हैं?', unsupportedFile:'असमर्थित फ़ाइल प्रकार! कृपया एक छवि या PDF चुनें।',
+  mascotWelcome:'स्वागत है, चैंपियंस! साथ खेलने और सीखने के लिए तैयार हैं? 🌟', gamesTitle:'बुद्धि खेल मंच',
+  lastScore:'पिछला स्कोर:', highScore:'सर्वोच्च स्कोर:',
+  game1Name:'हरकात और मद्द मैदान', game2Name:'बिंदु जोड़ो', game3Name:'अक्षर पकड़ो',
+  game4Name:'शब्द बनाओ', game5Name:'तजवीद स्मृति खेल',
+  chooseLevel:'अपना स्तर चुनें', levelEasy:'आसान', levelMedium:'मध्यम', levelHard:'कठिन',
+  seconds:'सेकंड', upToPoints:'{n} अंकों तक',
+  chooseSection:'एक भाग चुनें', sectionArabic:'अरबी भाषा', sectionArabicDesc:'अक्षर, हरकात, मद्द',
+  sectionTajweed:'तजवीद', sectionTajweedDesc:'उन्नत नियम और कौशल',
+  pitchInstruction:'गेंद को सही गोल की ओर निशाना लगाओ!',
+  connectDotsInstruction:'बिंदुओं को क्रम में 1, 2, 3... जोड़ें', wellDone:'शाबाश! 🎉',
+  rememberWord:'शब्द याद रखें, फिर उसे दोबारा बनाएँ:', hintBtn:'💡 संकेत (-1 अंक)',
+  timeUp:'समय समाप्त!', newRecord:'नया रिकॉर्ड! 🎉', yourScore:'आपका स्कोर:', backToMenu:'मेनू पर वापस जाएँ',
+  tabQuran:'📘 इंटरैक्टिव मुसहफ', tabColoring:'🎨 स्मार्ट रंग चुनौती',
+  legendMadd:'मद्द', legendIkhfa:'इख़्फ़ा और इदग़ाम', legendQalqalah:'क़ल्क़ला',
+  ttsNote:'🔊 उच्चारण ब्राउज़र का स्वचालित टेक्स्ट-टू-स्पीच है, किसी प्रमाणित क़ारी की तिलावत नहीं — यह केवल अक्षरों के उच्चारण स्थान पहचानने में मदद के लिए है।',
+  chooseAyahPrompt:'तजवीद व्याख्या देखने के लिए एक आयत चुनें।', ttsButtonTitle:'स्वचालित उच्चारण सुनें',
+  penMaddTitle:'मद्द पेन', penIkhfaTitle:'इख़्फ़ा/इदग़ाम पेन', penQalqalahTitle:'क़ल्क़ला पेन',
+  pointsLabel:'अंक:', searchFor:'ढूँढो:', colorIt:'और रंग भरो!', maddedLetter:'मद्द (दीर्घ) अक्षर', mCatchLetter:'अक्षर पकड़ो: {x} (बिना हरकत)', mCatchLetterHarakah:'अक्षर को उसकी हरकत सहित पकड़ो: {x}', mCatchMarked:'{x} वाला हर अक्षर पकड़ो', mCatchSukun:'सुकून वाला हर अक्षर पकड़ो', mCatchMaddNatural:'स्वाभाविक मद्द पकड़ो (जैसे: बा, बू) छोटी हरकत से बचें', mCatchMaddSpecific:'विशेष रूप से {x} वाला हर अक्षर पकड़ो', mCatchQalqalah:'केवल सुकून वाले क़ल्क़ला अक्षर पकड़ो: q t b j d', mCatchMeemSakinah:'साकिन मीम वाले शब्द पकड़ो', mCatchNoonTanween:'साकिन नून या तनवीन वाले शब्द पकड़ो', mCatchTafkhim:'भारी (मुफ़ख़्खम) अक्षर पकड़ो', mCatchLaamShamsi:'शम्सी लाम (मौन) वाले शब्द पकड़ो', mCatchRaaHeavy:'भारी रा वाले शब्द पकड़ो', mCatchQalqalahWord:'क़ल्क़ला वाले शब्द पकड़ो', mCatchNoonMeemWord:'साकिन नून या मीम वाले शब्द पकड़ो', mCatchTafkhimWord:'भारी अक्षर वाले शब्द पकड़ो', qIkhfaRule:'इख़्फ़ा का नियम', qIdghamRule:'इदग़ाम का नियम', qQalqalahLetter:'क़ल्क़ला अक्षर', ayahLabel:'आयत',
+  chooseLanguage:'इंटरफ़ेस भाषा चुनें', languageNote:'अरबी सीखने की सामग्री (अक्षर और क़ुरआन) हमेशा अरबी में रहेगी — इससे केवल आइकन और व्याख्याएँ बदलती हैं।'
+},
+ur:{
+  backToBoard:'بورڈ پر واپس جائیں', gamesMenuBtn:'گیمز مینو', dragToolbar:'ٹول بار منتقل کرنے کے لیے گھسیٹیں',
+  toolBg:'بورڈ کا پس منظر', toolTashkeel:'حرکات اور مد', toolPens:'قلم اور برش', toolColors:'رنگ',
+  toolUpload:'تصویر/PDF اپ لوڈ کریں', toolShare:'اسکرین شیئر کریں', toolMushaf:'تجویدی مصحف', toolGames:'ذہانت کے کھیل', toolEraser:'مٹانے والا',
+  bgPanelDesc:'بورڈ کے پس منظر کا انداز اور رنگ منتخب کریں:', bgWhite:'سفید', bgGrid:'گرڈ', bgLines:'لائنیں', bgDark:'گہرا',
+  bgBlue:'ہلکا نیلا', bgYellow:'ہلکا پیلا', bgGreen:'ہلکا سبز', bgPink:'ہلکا گلابی', bgPurple:'ہلکا جامنی',
+  tashkeelDesc:'کرسر کی جگہ شامل کرنے کے لیے حرکت پر دبائیں:',
+  markFatha:'فتحہ', markTanweenFath:'تنوین فتح', markDamma:'ضمہ', markTanweenDamm:'تنوین ضم',
+  markKasra:'کسرہ', markTanweenKasr:'تنوین کسر', markSukun:'سکون', markShadda:'شدّ',
+  markDaggerAlif:'الف خنجریہ', markMadd:'مد', zoneMaddAlif:'الف سے مد', zoneMaddWaw:'واؤ سے مد', zoneMaddYaa:'یاء سے مد',
+  pensChooseTool:'ایک آلہ منتخب کریں:', toolWrite:'لکھنا', toolInk:'عربی روشنائی قلم', toolNeon:'چمکدار نیون برش',
+  toolHighlighter:'ہائی لائٹر', toolSmartEraser:'سمارٹ مٹانے والا', thicknessLabel:'لکیر کی موٹائی:',
+  colorPaletteLabel:'رنگ پیلیٹ:', writeDrawNote:'آپ ایک ہی بورڈ پر لکھ اور ڈرا دونوں کر سکتے ہیں۔',
+  confirmClearBoard:'کیا آپ واقعی پورا بورڈ صاف کرنا چاہتے ہیں؟', unsupportedFile:'غیر معاون فائل فارمیٹ! براہ کرم تصویر یا PDF منتخب کریں۔',
+  mascotWelcome:'خوش آمدید، ہیرو! کھیلنے اور سیکھنے کے لیے تیار ہیں؟ 🌟', gamesTitle:'ذہانت کے کھیلوں کا پلیٹ فارم',
+  lastScore:'پچھلا اسکور:', highScore:'بہترین اسکور:',
+  game1Name:'حرکات اور مد کا میدان', game2Name:'نقطے جوڑیں', game3Name:'حروف پکڑیں',
+  game4Name:'لفظ بنائیں', game5Name:'تجوید یادداشت',
+  chooseLevel:'اپنی سطح منتخب کریں', levelEasy:'آسان', levelMedium:'درمیانہ', levelHard:'مشکل',
+  seconds:'سیکنڈ', upToPoints:'{n} پوائنٹس تک',
+  chooseSection:'ایک حصہ منتخب کریں', sectionArabic:'عربی زبان', sectionArabicDesc:'حروف، حرکات، مد',
+  sectionTajweed:'تجوید', sectionTajweedDesc:'اعلیٰ درجے کے قواعد اور مہارتیں',
+  pitchInstruction:'گیند کو صحیح گول کی طرف بھیجیں!',
+  connectDotsInstruction:'نقطوں کو ترتیب سے 1، 2، 3... جوڑیں', wellDone:'شاباش! 🎉',
+  rememberWord:'لفظ یاد رکھیں، پھر دوبارہ بنائیں:', hintBtn:'💡 اشارہ (-1 پوائنٹ)',
+  timeUp:'وقت ختم!', newRecord:'نیا ریکارڈ! 🎉', yourScore:'آپ کا اسکور:', backToMenu:'مینو پر واپس جائیں',
+  tabQuran:'📘 انٹرایکٹو مصحف', tabColoring:'🎨 ذہین رنگ بھرنے کا چیلنج',
+  legendMadd:'مد', legendIkhfa:'اخفا اور ادغام', legendQalqalah:'قلقلہ',
+  ttsNote:'🔊 تلفظ براؤزر کی خودکار متن سے تقریر ہے، کسی مستند قاری کی تلاوت نہیں — یہ صرف حروف کے مخارج پہچاننے میں مدد کے لیے ہے۔',
+  chooseAyahPrompt:'تجویدی وضاحت دیکھنے کے لیے ایک آیت منتخب کریں۔', ttsButtonTitle:'خودکار تلفظ سنیں',
+  penMaddTitle:'مد قلم', penIkhfaTitle:'اخفا/ادغام قلم', penQalqalahTitle:'قلقلہ قلم',
+  pointsLabel:'پوائنٹس:', searchFor:'تلاش کریں:', colorIt:'اور رنگ بھریں!', maddedLetter:'مدّ والا حرف', mCatchLetter:'حرف پکڑیں: {x} (بغیر حرکت)', mCatchLetterHarakah:'حرف کو حرکت سمیت پکڑیں: {x}', mCatchMarked:'{x} والا ہر حرف پکڑیں', mCatchSukun:'سکون والا ہر حرف پکڑیں', mCatchMaddNatural:'طبعی مد پکڑیں (جیسے: با، بُو) مختصر حرکت سے بچیں', mCatchMaddSpecific:'خاص طور پر {x} والا ہر حرف پکڑیں', mCatchQalqalah:'صرف ساکن قلقلہ حروف پکڑیں: ق ط ب ج د', mCatchMeemSakinah:'ساکن میم والے الفاظ پکڑیں', mCatchNoonTanween:'ساکن نون یا تنوین والے الفاظ پکڑیں', mCatchTafkhim:'بھاری (مفخم) حروف پکڑیں', mCatchLaamShamsi:'شمسی لام (خاموش) والے الفاظ پکڑیں', mCatchRaaHeavy:'بھاری راء والے الفاظ پکڑیں', mCatchQalqalahWord:'قلقلہ والے الفاظ پکڑیں', mCatchNoonMeemWord:'ساکن نون یا میم والے الفاظ پکڑیں', mCatchTafkhimWord:'بھاری حرف والے الفاظ پکڑیں', qIkhfaRule:'اخفا کا حکم', qIdghamRule:'ادغام کا حکم', qQalqalahLetter:'قلقلہ حرف', ayahLabel:'آیت',
+  chooseLanguage:'انٹرفیس زبان منتخب کریں', languageNote:'عربی تعلیمی مواد (حروف اور قرآن) ہمیشہ عربی میں رہے گا — یہ صرف آئیکنز اور وضاحتیں تبدیل کرتا ہے۔'
+},
+fa:{
+  backToBoard:'بازگشت به تخته', gamesMenuBtn:'منوی بازی‌ها', dragToolbar:'برای جابجایی نوار ابزار بکشید',
+  toolBg:'پس‌زمینه تخته', toolTashkeel:'اعراب و مدّ', toolPens:'قلم‌ها و قلم‌موها', toolColors:'رنگ‌ها',
+  toolUpload:'بارگذاری تصویر/PDF', toolShare:'اشتراک صفحه', toolMushaf:'مصحف تجوید', toolGames:'بازی‌های هوشمند', toolEraser:'پاک‌کن',
+  bgPanelDesc:'سبک و رنگ پس‌زمینه تخته را انتخاب کنید:', bgWhite:'سفید', bgGrid:'شبکه‌ای', bgLines:'خط‌دار', bgDark:'تیره',
+  bgBlue:'آبی روشن', bgYellow:'زرد روشن', bgGreen:'سبز روشن', bgPink:'صورتی روشن', bgPurple:'بنفش روشن',
+  tashkeelDesc:'برای افزودن در محل نشانگر، روی یک اعراب بزنید:',
+  markFatha:'فتحه', markTanweenFath:'تنوین فتح', markDamma:'ضمه', markTanweenDamm:'تنوین ضم',
+  markKasra:'کسره', markTanweenKasr:'تنوین کسر', markSukun:'سکون', markShadda:'تشدید',
+  markDaggerAlif:'الف خنجری', markMadd:'مدّ', zoneMaddAlif:'مدّ با الف', zoneMaddWaw:'مدّ با واو', zoneMaddYaa:'مدّ با یا',
+  pensChooseTool:'یک ابزار انتخاب کنید:', toolWrite:'نوشتن', toolInk:'خودکار جوهر عربی', toolNeon:'قلم‌موی نئون درخشان',
+  toolHighlighter:'ماژیک هایلایت', toolSmartEraser:'پاک‌کن هوشمند', thicknessLabel:'ضخامت خط:',
+  colorPaletteLabel:'پالت رنگ:', writeDrawNote:'می‌توانید همزمان روی یک تخته بنویسید و نقاشی کنید.',
+  confirmClearBoard:'آیا مطمئنید می‌خواهید کل تخته را پاک کنید؟', unsupportedFile:'فرمت فایل پشتیبانی نمی‌شود! لطفاً یک تصویر یا PDF انتخاب کنید.',
+  mascotWelcome:'خوش آمدید قهرمانان! آماده‌اید با هم بازی و یادگیری کنیم؟ 🌟', gamesTitle:'پلتفرم بازی‌های هوشمند',
+  lastScore:'آخرین امتیاز:', highScore:'بالاترین امتیاز:',
+  game1Name:'زمین حرکات و مدّ', game2Name:'اتصال نقطه‌ها', game3Name:'صید حروف',
+  game4Name:'سازنده کلمه', game5Name:'حافظه تجوید',
+  chooseLevel:'سطح خود را انتخاب کنید', levelEasy:'آسان', levelMedium:'متوسط', levelHard:'سخت',
+  seconds:'ثانیه', upToPoints:'تا {n} امتیاز',
+  chooseSection:'یک بخش انتخاب کنید', sectionArabic:'زبان عربی', sectionArabicDesc:'حروف، حرکات، مدّ',
+  sectionTajweed:'تجوید', sectionTajweedDesc:'قوانین و مهارت‌های پیشرفته',
+  pitchInstruction:'توپ را به سمت دروازه درست هدف بگیر!',
+  connectDotsInstruction:'نقطه‌ها را به ترتیب ۱، ۲، ۳... به هم وصل کن', wellDone:'آفرین! 🎉',
+  rememberWord:'کلمه را به خاطر بسپار، سپس دوباره بساز:', hintBtn:'💡 راهنمایی (۱- امتیاز)',
+  timeUp:'زمان تمام شد!', newRecord:'رکورد جدید! 🎉', yourScore:'امتیاز شما:', backToMenu:'بازگشت به منو',
+  tabQuran:'📘 مصحف تعاملی', tabColoring:'🎨 چالش رنگ‌آمیزی هوشمند',
+  legendMadd:'مدّ', legendIkhfa:'اخفا و ادغام', legendQalqalah:'قلقله',
+  ttsNote:'🔊 تلفظ به‌صورت خودکار توسط مرورگر تولید می‌شود و تلاوت یک قاری معتبر نیست — فقط برای کمک به شناخت مخارج حروف است.',
+  chooseAyahPrompt:'برای مشاهده توضیح تجویدی، یک آیه انتخاب کنید.', ttsButtonTitle:'شنیدن تلفظ خودکار',
+  penMaddTitle:'قلم مدّ', penIkhfaTitle:'قلم اخفا/ادغام', penQalqalahTitle:'قلم قلقله',
+  pointsLabel:'امتیاز:', searchFor:'پیدا کن:', colorIt:'و رنگش کن!', maddedLetter:'حرف مدّدار', mCatchLetter:'حرف را بگیر: {x} (بدون حرکت)', mCatchLetterHarakah:'حرف را با حرکتش بگیر: {x}', mCatchMarked:'هر حرفی که {x} دارد را بگیر', mCatchSukun:'هر حرفی که سکون دارد را بگیر', mCatchMaddNatural:'مدّ طبیعی را بگیر (مثل: با، بو) از حرکت کوتاه دوری کن', mCatchMaddSpecific:'هر حرفی که دقیقاً {x} دارد را بگیر', mCatchQalqalah:'فقط حروف قلقله ساکن را بگیر: ق ط ب ج د', mCatchMeemSakinah:'کلماتی که میم ساکن دارند را بگیر', mCatchNoonTanween:'کلماتی که نون ساکن یا تنوین دارند را بگیر', mCatchTafkhim:'حروف مفخّم (سنگین) را بگیر', mCatchLaamShamsi:'کلماتی با لام شمسی (بی‌صدا) را بگیر', mCatchRaaHeavy:'کلماتی با رای مفخّم را بگیر', mCatchQalqalahWord:'کلماتی که قلقله دارند را بگیر', mCatchNoonMeemWord:'کلماتی که نون یا میم ساکن دارند را بگیر', mCatchTafkhimWord:'کلماتی با حرف مفخّم را بگیر', qIkhfaRule:'حکم اخفا', qIdghamRule:'حکم ادغام', qQalqalahLetter:'حرف قلقله', ayahLabel:'آیه',
+  chooseLanguage:'زبان رابط کاربری را انتخاب کنید', languageNote:'محتوای آموزشی عربی (حروف و قرآن) همیشه به عربی باقی می‌ماند — این فقط نمادها و توضیحات را تغییر می‌دهد.'
+}
+};
+
+let currentLang = 'ar';
+function t(key){
+  const d = I18N[currentLang] || I18N.ar;
+  return (d[key] !== undefined) ? d[key] : (I18N.ar[key] !== undefined ? I18N.ar[key] : key);
+}
+function tf(key, params){
+  let s = t(key);
+  if(params){ Object.keys(params).forEach(k => { s = s.replace('{'+k+'}', params[k]); }); }
+  return s;
+}
+
 
 let audioCtx = null;
 function beep(type){
@@ -729,11 +1074,21 @@ function beep(type){
   }catch(e){ /* WebAudio غير متاح، نتجاهل الصوت */ }
 }
 
-const PRAISE_PHRASES = ['أنت بطل! 🌟','رائع جداً! 🎉','ممتاز يا بطل! 💪','أحسنت يا نجمة! ✨','ذكي جداً! 🧠','برافو عليك! 👏','رائعة يا بطلة! 🌸','استمر أنت مبدع! 🚀'];
+const PRAISE_PHRASES_I18N = {
+  ar:['أنت بطل! 🌟','رائع جداً! 🎉','ممتاز يا بطل! 💪','أحسنت يا نجمة! ✨','ذكي جداً! 🧠','برافو عليك! 👏','رائعة يا بطلة! 🌸','استمر أنت مبدع! 🚀'],
+  en:['You\'re a champion! 🌟','Amazing! 🎉','Great job, hero! 💪','Well done, star! ✨','So smart! 🧠','Bravo! 👏','Wonderful! 🌸','Keep going, genius! 🚀'],
+  tr:['Sen bir şampiyonsun! 🌟','Harika! 🎉','Aferin kahraman! 💪','Aferin yıldızım! ✨','Çok zekisin! 🧠','Bravo! 👏','Harikasın! 🌸','Devam et dahi! 🚀'],
+  ru:['Ты чемпион! 🌟','Потрясающе! 🎉','Молодец, герой! 💪','Отлично, звёздочка! ✨','Ты такой умный! 🧠','Браво! 👏','Замечательно! 🌸','Продолжай, гений! 🚀'],
+  zh:['你是冠军！🌟','太棒了！🎉','做得好，英雄！💪','做得好，明星！✨','真聪明！🧠','太厉害了！👏','太精彩了！🌸','继续加油，天才！🚀'],
+  hi:['तुम चैंपियन हो! 🌟','शानदार! 🎉','शाबाश हीरो! 💪','बहुत खूब, सितारे! ✨','कितने होशियार हो! 🧠','वाह! 👏','अद्भुत! 🌸','चलते रहो, प्रतिभाशाली! 🚀'],
+  ur:['آپ چیمپیئن ہیں! 🌟','زبردست! 🎉','شاباش ہیرو! 💪','بہت خوب، ستارے! ✨','کتنے ذہین ہو! 🧠','واہ! 👏','شاندار! 🌸','جاری رکھو، ذہین! 🚀'],
+  fa:['تو یک قهرمانی! 🌟','فوق‌العاده! 🎉','آفرین قهرمان! 💪','عالی بود، ستاره! ✨','چقدر باهوشی! 🧠','براوو! 👏','شگفت‌انگیز! 🌸','ادامه بده، نابغه! 🚀']
+};
 function praiseToast(){
   const el = document.getElementById('praise-toast');
   if(!el) return;
-  el.innerText = PRAISE_PHRASES[Math.floor(Math.random() * PRAISE_PHRASES.length)];
+  const phrases = PRAISE_PHRASES_I18N[currentLang] || PRAISE_PHRASES_I18N.ar;
+  el.innerText = phrases[Math.floor(Math.random() * phrases.length)];
   el.classList.add('show');
   clearTimeout(praiseToast._t);
   praiseToast._t = setTimeout(() => el.classList.remove('show'), 1200);
@@ -852,12 +1207,50 @@ const App = {
     this.currentMode = mode;
     if(mode === 'board'){ Board.resizeCanvas(); }
   },
-  init(){
+  async init(){
+    const savedLang = await Persist.getString('fusha-lang', 'ar');
+    applyLanguage(savedLang, true);
     Board.init();
     Games.init();
     Mushaf.init();
+  },
+  openLangPicker(){
+    const grid = document.getElementById('lang-grid');
+    grid.innerHTML = Object.keys(LANGS).map(code =>
+      `<div class="lang-chip ${code===currentLang?'selected':''}" onclick="App.pickLanguage('${code}')">${LANGS[code].label}</div>`
+    ).join('');
+    document.getElementById('lang-modal').classList.add('show');
+  },
+  closeLangPicker(){ document.getElementById('lang-modal').classList.remove('show'); },
+  async pickLanguage(code){
+    applyLanguage(code);
+    await Persist.setString('fusha-lang', code);
+    App.closeLangPicker();
   }
 };
+
+function applyLanguage(code, isInit){
+  if(!LANGS[code]) code = 'ar';
+  currentLang = code;
+  document.documentElement.lang = code;
+  document.documentElement.dir = LANGS[code].dir;
+  document.getElementById('appbar-lang-label').innerText = LANGS[code].label;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const val = t(el.dataset.i18nTitle);
+    el.setAttribute('data-title', val);
+    el.setAttribute('title', val);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-tpl]').forEach(el => {
+    el.textContent = tf(el.dataset.i18nTpl, { n: el.dataset.tplN });
+  });
+  if(!isInit){
+    if(typeof Board !== 'undefined') Board.onLanguageChange();
+    if(typeof Mushaf !== 'undefined') Mushaf.onLanguageChange();
+    if(typeof Games !== 'undefined') Games.onLanguageChange();
+  }
+}
 
 /* ========================================================
    Board Module: السبورة (كتابة + رسم + أدوات)
@@ -872,15 +1265,16 @@ const Board = (function(){
   let drawing = false;
   let lastX = 0, lastY = 0;
   let isDarkBg = false;
+  let lastPanelTool = null;
 
   const wheelColors = ['#e63946','#f3722c','#f9c74f','#90be6d','#2a9d8f','#43aa8b',
                         '#277da1','#4361ee','#7209b7','#b967ff','#f72585','#000000'];
   const tools = [
-    { id:'write', label:'كتابة', emoji:'✍️' },
-    { id:'ink', label:'حبر عربي', emoji:'🖋️' },
-    { id:'neon', label:'نيون متوهج', emoji:'🌟' },
-    { id:'highlighter', label:'هايلايتر', emoji:'🖍️' },
-    { id:'eraser', label:'ممحاة ذكية', emoji:'🧽' }
+    { id:'write', labelKey:'toolWrite', emoji:'✍️' },
+    { id:'ink', labelKey:'toolInk', emoji:'🖋️' },
+    { id:'neon', labelKey:'toolNeon', emoji:'🌟' },
+    { id:'highlighter', labelKey:'toolHighlighter', emoji:'🖍️' },
+    { id:'eraser', labelKey:'toolSmartEraser', emoji:'🧽' }
   ];
 
   function init(){
@@ -1002,21 +1396,21 @@ const Board = (function(){
   }
 
   const bgOptions = [
-    { id:'white', label:'أبيض', swatch:'#ffffff' },
-    { id:'grid', label:'شبكة', swatch:'repeating-linear-gradient(0deg,#fff,#fff 6px,#ccc 7px)' },
-    { id:'lines', label:'أسطر', swatch:'repeating-linear-gradient(180deg,#fff,#fff 8px,#b9c4d0 9px)' },
-    { id:'dark', label:'داكن', swatch:'#1e1e1e' },
-    { id:'color-blue', label:'أزرق فاتح', swatch:'#eaf4ff' },
-    { id:'color-yellow', label:'أصفر فاتح', swatch:'#fffbe6' },
-    { id:'color-green', label:'أخضر فاتح', swatch:'#eafbf0' },
-    { id:'color-pink', label:'وردي فاتح', swatch:'#fff0f5' },
-    { id:'color-purple', label:'بنفسجي فاتح', swatch:'#f5f0ff' }
+    { id:'white', labelKey:'bgWhite', swatch:'#ffffff' },
+    { id:'grid', labelKey:'bgGrid', swatch:'repeating-linear-gradient(0deg,#fff,#fff 6px,#ccc 7px)' },
+    { id:'lines', labelKey:'bgLines', swatch:'repeating-linear-gradient(180deg,#fff,#fff 8px,#b9c4d0 9px)' },
+    { id:'dark', labelKey:'bgDark', swatch:'#1e1e1e' },
+    { id:'color-blue', labelKey:'bgBlue', swatch:'#eaf4ff' },
+    { id:'color-yellow', labelKey:'bgYellow', swatch:'#fffbe6' },
+    { id:'color-green', labelKey:'bgGreen', swatch:'#eafbf0' },
+    { id:'color-pink', labelKey:'bgPink', swatch:'#fff0f5' },
+    { id:'color-purple', labelKey:'bgPurple', swatch:'#f5f0ff' }
   ];
   let currentBg = 'white';
   function renderBgOptions(){
     return bgOptions.map(o =>
       `<div class="bg-option ${o.id===currentBg?'selected':''}" onclick="Board.pickBg('${o.id}')">
-         <div class="bgo-swatch" style="background:${o.swatch};"></div>${o.label}
+         <div class="bgo-swatch" style="background:${o.swatch};"></div>${t(o.labelKey)}
        </div>`
     ).join('');
   }
@@ -1043,41 +1437,42 @@ const Board = (function(){
   }
 
   function openPanel(tool){
+    lastPanelTool = tool;
     if(tool === 'background'){
-      panelTitle.innerText = 'خلفية السبورة';
+      panelTitle.innerText = t('toolBg');
       panelContent.innerHTML = `
-        <p style="margin-bottom:12px;font-size:0.88rem;">اختر شكل ولون خلفية السبورة:</p>
+        <p style="margin-bottom:12px;font-size:0.88rem;">${t('bgPanelDesc')}</p>
         <div class="bg-option-grid" id="bg-option-grid">${renderBgOptions()}</div>`;
     } else if(tool === 'tashkeel'){
-      panelTitle.innerText = 'التشكيل والمدود';
+      panelTitle.innerText = t('toolTashkeel');
       panelContent.innerHTML = `
-        <p style="margin-bottom:15px;font-size:0.9rem;">اضغط على الحركة لإضافتها في مكان وقوف المؤشر:</p>
+        <p style="margin-bottom:15px;font-size:0.9rem;">${t('tashkeelDesc')}</p>
         <div class="tashkeel-grid">
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('َ')">َ <span>فَتْحَة</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ً')">ً <span>تنوين فتح</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ُ')">ُ <span>ضَمَّة</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٌ')">ٌ <span>تنوين ضم</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ِ')">ِ <span>كَسْرَة</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٍ')">ٍ <span>تنوين كسر</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ْ')">ْ <span>سُكُون</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ّ')">ّ <span>شَدَّة</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٰ')">ٰ <span>ألف خنجرية</span></button>
-          <button class="tashkeel-btn" onclick="Board.insertTashkeel('آ')">آ <span>مدّ</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('َ')">َ <span>${t('markFatha')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ً')">ً <span>${t('markTanweenFath')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ُ')">ُ <span>${t('markDamma')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٌ')">ٌ <span>${t('markTanweenDamm')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ِ')">ِ <span>${t('markKasra')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٍ')">ٍ <span>${t('markTanweenKasr')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ْ')">ْ <span>${t('markSukun')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ّ')">ّ <span>${t('markShadda')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('ٰ')">ٰ <span>${t('markDaggerAlif')}</span></button>
+          <button class="tashkeel-btn" onclick="Board.insertTashkeel('آ')">آ <span>${t('markMadd')}</span></button>
         </div>`;
     } else if(tool === 'pens'){
-      panelTitle.innerText = 'الأقلام والفرش';
+      panelTitle.innerText = t('toolPens');
       panelContent.innerHTML = `
-        <p style="margin-bottom:10px;font-size:0.88rem;">اختر الأداة:</p>
+        <p style="margin-bottom:10px;font-size:0.88rem;">${t('pensChooseTool')}</p>
         <div class="tool-grid" id="tool-grid">${renderToolButtons()}</div>
 
-        <p style="margin:16px 0 6px;font-size:0.88rem;">سماكة الخط:</p>
+        <p style="margin:16px 0 6px;font-size:0.88rem;">${t('thicknessLabel')}</p>
         <input type="range" id="thickness-slider" min="1" max="24" value="${brushSize}"
                oninput="Board.setBrush(this.value)" style="width:100%;">
 
-        <p style="margin:16px 0 10px;font-size:0.88rem;">لوحة الألوان:</p>
+        <p style="margin:16px 0 10px;font-size:0.88rem;">${t('colorPaletteLabel')}</p>
         <div class="color-wheel" id="color-wheel">${renderColorWheel()}</div>
 
-        <p style="font-size:0.8rem;color:gray;margin-top:14px;">يمكنك الكتابة والرسم معاً على نفس السبورة.</p>`;
+        <p style="font-size:0.8rem;color:gray;margin-top:14px;">${t('writeDrawNote')}</p>`;
     } else if(tool === 'colors'){
       openPanel('pens');
       return;
@@ -1086,10 +1481,10 @@ const Board = (function(){
   }
 
   function renderToolButtons(){
-    return tools.map(t => {
-      const active = (t.id === 'write' ? inputMode === 'write' : (inputMode === 'draw' && currentTool === t.id));
-      return `<button class="tool-chip ${active?'selected':''}" onclick="Board.selectTool('${t.id}')">
-                <span class="tc-emoji">${t.emoji}</span>${t.label}
+    return tools.map(item => {
+      const active = (item.id === 'write' ? inputMode === 'write' : (inputMode === 'draw' && currentTool === item.id));
+      return `<button class="tool-chip ${active?'selected':''}" onclick="Board.selectTool('${item.id}')">
+                <span class="tc-emoji">${item.emoji}</span>${t(item.labelKey)}
               </button>`;
     }).join('');
   }
@@ -1127,7 +1522,7 @@ const Board = (function(){
   function closePanel(){ sidePanel.classList.remove('active'); }
 
   function clearBoard(){
-    if(confirm('هل أنت متأكد من مسح السبورة بالكامل؟')){
+    if(confirm(t('confirmClearBoard'))){
       textArea.value = '';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -1187,7 +1582,7 @@ const Board = (function(){
       contentElement = document.createElement('iframe');
       contentElement.src = fileURL;
     } else {
-      alert('صيغة الملف غير مدعومة! الرجاء اختيار صورة أو ملف PDF.');
+      alert(t('unsupportedFile'));
       return;
     }
     createFloatingWindow(file.name, contentElement);
@@ -1209,9 +1604,15 @@ const Board = (function(){
     }
   }
 
+  function onLanguageChange(){
+    if(sidePanel.classList.contains('active') && lastPanelTool){
+      openPanel(lastPanelTool);
+    }
+  }
+
   return {
     init, changeBg, pickBg, setInputMode, insertTashkeel, openPanel, selectTool, setBrush, setColor,
-    closePanel, clearBoard, handleFileUpload, startScreenShare, resizeCanvas
+    closePanel, clearBoard, handleFileUpload, startScreenShare, resizeCanvas, onLanguageChange
   };
 })();
 
@@ -1297,10 +1698,10 @@ const Games = (function(){
       highScore = currentScore;
       await Persist.setNumber('fusha-games-highscore', highScore);
       document.getElementById('ui-highscore').innerText = highScore;
-      document.getElementById('end-msg').innerText = 'رقم قياسي جديد! 🎉';
+      document.getElementById('end-msg').innerText = t('newRecord');
       cheer();
     } else {
-      document.getElementById('end-msg').innerText = 'انتهى الوقت!';
+      document.getElementById('end-msg').innerText = t('timeUp');
     }
     document.getElementById('end-score').innerText = currentScore;
     showScreen('end-screen');
@@ -1322,23 +1723,23 @@ const Games = (function(){
      اللعبة 1: ملعب الحركات والمدود ⚽
      =================================================== */
   const g1Pool = {
-    1: { zones:[{id:'fatha',label:'فتحة',sym:'َ'},{id:'damma',label:'ضمة',sym:'ُ'},{id:'kasra',label:'كسرة',sym:'ِ'}],
+    1: { zones:[{id:'fatha',labelKey:'markFatha',sym:'َ'},{id:'damma',labelKey:'markDamma',sym:'ُ'},{id:'kasra',labelKey:'markKasra',sym:'ِ'}],
          items:[
            {t:'بَ',z:'fatha'},{t:'بُ',z:'damma'},{t:'بِ',z:'kasra'},
            {t:'تَ',z:'fatha'},{t:'تُ',z:'damma'},{t:'تِ',z:'kasra'},
            {t:'جَ',z:'fatha'},{t:'جُ',z:'damma'},{t:'جِ',z:'kasra'},
            {t:'سَ',z:'fatha'},{t:'سُ',z:'damma'},{t:'سِ',z:'kasra'}
          ]},
-    2: { zones:[{id:'fatha',label:'فتحة',sym:'َ'},{id:'damma',label:'ضمة',sym:'ُ'},{id:'kasra',label:'كسرة',sym:'ِ'},
-                {id:'maa',label:'مد بالألف',sym:'ـَا'},{id:'mwaw',label:'مد بالواو',sym:'ـُو'},{id:'myaa',label:'مد بالياء',sym:'ـِي'}],
+    2: { zones:[{id:'fatha',labelKey:'markFatha',sym:'َ'},{id:'damma',labelKey:'markDamma',sym:'ُ'},{id:'kasra',labelKey:'markKasra',sym:'ِ'},
+                {id:'maa',labelKey:'zoneMaddAlif',sym:'ـَا'},{id:'mwaw',labelKey:'zoneMaddWaw',sym:'ـُو'},{id:'myaa',labelKey:'zoneMaddYaa',sym:'ـِي'}],
          items:[
            {t:'بَ',z:'fatha'},{t:'بُ',z:'damma'},{t:'بِ',z:'kasra'},
            {t:'بَا',z:'maa'},{t:'بُو',z:'mwaw'},{t:'بِي',z:'myaa'},
            {t:'تَا',z:'maa'},{t:'تُو',z:'mwaw'},{t:'تِي',z:'myaa'},
            {t:'جَا',z:'maa'},{t:'رُو',z:'mwaw'},{t:'سِي',z:'myaa'}
          ]},
-    3: { zones:[{id:'maa',label:'مد بالألف',sym:'ـَا'},{id:'mwaw',label:'مد بالواو',sym:'ـُو'},{id:'myaa',label:'مد بالياء',sym:'ـِي'},
-                {id:'tfath',label:'تنوين فتح',sym:'ـً'},{id:'tdamm',label:'تنوين ضم',sym:'ـٌ'},{id:'tkasr',label:'تنوين كسر',sym:'ـٍ'}],
+    3: { zones:[{id:'maa',labelKey:'zoneMaddAlif',sym:'ـَا'},{id:'mwaw',labelKey:'zoneMaddWaw',sym:'ـُو'},{id:'myaa',labelKey:'zoneMaddYaa',sym:'ـِي'},
+                {id:'tfath',labelKey:'markTanweenFath',sym:'ـً'},{id:'tdamm',labelKey:'markTanweenDamm',sym:'ـٌ'},{id:'tkasr',labelKey:'markTanweenKasr',sym:'ـٍ'}],
          items:[
            {t:'بَا',z:'maa'},{t:'بُو',z:'mwaw'},{t:'بِي',z:'myaa'},
            {t:'كِتَابًا',z:'tfath'},{t:'قَلَمٌ',z:'tdamm'},{t:'كِتَابٍ',z:'tkasr'},
@@ -1352,7 +1753,7 @@ const Games = (function(){
     const cfg = g1Pool[activeLevel];
     const row = document.getElementById('goal-row');
     row.innerHTML = cfg.zones.map(z =>
-      `<div class="goal-zone" data-zone="${z.id}" onclick="Games.kickBall('${z.id}', this)"><span class="gz-sym">${z.sym}</span>${z.label}</div>`
+      `<div class="goal-zone" data-zone="${z.id}" onclick="Games.kickBall('${z.id}', this)"><span class="gz-sym">${z.sym}</span>${t(z.labelKey)}</div>`
     ).join('');
     nextBall();
   }
@@ -1514,7 +1915,7 @@ const Games = (function(){
       g2Ctx.closePath();
       g2Ctx.fillStyle = g2Shape.fill || 'rgba(57,255,20,0.35)';
       g2Ctx.fill();
-      document.getElementById('shape-reveal-label').innerText = 'أحسنت! 🎉';
+      document.getElementById('shape-reveal-label').innerText = t('wellDone');
       addScore(activeLevel === 1 ? 3 : (activeLevel === 2 ? 5 : 8));
       cheer();
       const wrapEl = document.getElementById('dots-wrap');
@@ -1522,7 +1923,7 @@ const Games = (function(){
       bigCelebration(r.left + r.width/2, r.top + r.height/2);
       praiseToast();
       document.getElementById('reveal-emoji').innerText = g2Shape.emoji;
-      document.getElementById('mc-praise').innerText = PRAISE_PHRASES[Math.floor(Math.random()*PRAISE_PHRASES.length)];
+      document.getElementById('mc-praise').innerText = (PRAISE_PHRASES_I18N[currentLang] || PRAISE_PHRASES_I18N.ar)[Math.floor(Math.random()*8)];
       document.getElementById('mc-word').innerHTML = `<strong>${g2Shape.name}</strong> — ${g2Shape.en}`;
       document.getElementById('mascot-celebrate').classList.add('show');
       speakWordTwice(g2Shape.name, () => {
@@ -1542,18 +1943,18 @@ const Games = (function(){
       const letters = ['ب','ت','ث','ج','ح','خ','د','ر','س','ش','ص','ع','ف','ق','ك','ل','م','ن','هـ','و','ي'];
       const pool = letters.sort(() => 0.5 - Math.random()).slice(0, 8);
       const target = pool[Math.floor(Math.random()*pool.length)];
-      return { prompt:`اصطد الحرف: ${target} (بدون حركة)`, items: pool.map(c => ({ text:c, match:c===target })) };
+      return { prompt:tf('mCatchLetter',{x:target}), items: pool.map(c => ({ text:c, match:c===target })) };
     },
     harakahByName(){
       const marks = [
-        { m:'َ', name:'الفتحة' }, { m:'ُ', name:'الضمة' }, { m:'ِ', name:'الكسرة' },
-        { m:'ً', name:'تنوين الفتح' }, { m:'ٌ', name:'تنوين الضم' }, { m:'ٍ', name:'تنوين الكسر' }
+        { m:'َ', key:'markFatha' }, { m:'ُ', key:'markDamma' }, { m:'ِ', key:'markKasra' },
+        { m:'ً', key:'markTanweenFath' }, { m:'ٌ', key:'markTanweenDamm' }, { m:'ٍ', key:'markTanweenKasr' }
       ];
       const roots = ['ب','ت','ج','س','ر','ع','ك','د'];
       const target = marks[Math.floor(Math.random()*marks.length)];
       const items = [];
       roots.forEach(r => marks.forEach(mk => items.push({ text:r+mk.m, match:mk.m===target.m })));
-      return { prompt:`اصطد كل حرف عليه ${target.name}`, items };
+      return { prompt:tf('mCatchMarked',{x:t(target.key)}), items };
     },
     sukoonSpot(){
       const roots = ['ب','ت','ج','س','ر','ك','د','ف'];
@@ -1563,7 +1964,7 @@ const Games = (function(){
         items.push({ text:r+'َ', match:false });
         items.push({ text:r+'ُ', match:false });
       });
-      return { prompt:'اصطد كل حرف عليه سكون', items };
+      return { prompt:t('mCatchSukun'), items };
     },
     maddLength(){
       const roots = ['ب','ت','س','ر','ف','ج','ل'];
@@ -1574,81 +1975,81 @@ const Games = (function(){
         items.push({ text:r+'ُ', match:false });
         items.push({ text:r+'ُو', match:true });
       });
-      return { prompt:'اصطد المد الطبيعي (مثل: با، بُو) وتجنّب الحركة القصيرة', items };
+      return { prompt:t('mCatchMaddNatural'), items };
     },
     maddType(){
       const roots = ['ب','ت','س','ر','ف','ج'];
-      const types = [{ suf:'َا', name:'المد بالألف' }, { suf:'ُو', name:'المد بالواو' }, { suf:'ِي', name:'المد بالياء' }];
+      const types = [{ suf:'َا', key:'zoneMaddAlif' }, { suf:'ُو', key:'zoneMaddWaw' }, { suf:'ِي', key:'zoneMaddYaa' }];
       const target = types[Math.floor(Math.random()*types.length)];
       const items = [];
-      roots.forEach(r => types.forEach(t => items.push({ text:r+t.suf, match:t.suf===target.suf })));
-      return { prompt:`اصطد كل حرف فيه ${target.name} تحديداً`, items };
+      roots.forEach(r => types.forEach(ty => items.push({ text:r+ty.suf, match:ty.suf===target.suf })));
+      return { prompt:tf('mCatchMaddSpecific',{x:t(target.key)}), items };
     },
     qalqalah(){
       const q = ['قْ','طْ','بْ','جْ','دْ'];
       const other = ['سْ','رْ','نْ','لْ','فْ'];
       const items = [...q.map(t => ({ text:t, match:true })), ...other.map(t => ({ text:t, match:false }))];
-      return { prompt:'اصطد حروف القلقلة الساكنة فقط: ق ط ب ج د', items };
+      return { prompt:t('mCatchQalqalah'), items };
     },
     meemSakinah(){
       const items = [
         { text:'لَمْ', match:true }, { text:'هُمْ', match:true }, { text:'أَنْتُمْ', match:true }, { text:'كُنْتُمْ', match:true },
         { text:'كَتَبَ', match:false }, { text:'قَرَأَ', match:false }, { text:'ذَهَبَ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها ميم ساكنة', items };
+      return { prompt:t('mCatchMeemSakinah'), items };
     },
     noonTanween(){
       const items = [
         { text:'مِنْ', match:true }, { text:'عَنْ', match:true }, { text:'كِتَابٌ', match:true }, { text:'قَلَمًا', match:true },
         { text:'كَتَبَ', match:false }, { text:'ذَهَبَ', match:false }, { text:'دَرَسَ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها نون ساكنة أو تنوين', items };
+      return { prompt:t('mCatchNoonTanween'), items };
     },
     tafkhim(){
       const heavy = ['خ','ص','ض','ط','ظ','غ','ق'];
       const light = ['ب','ت','ث','ج','د','س','ل'];
       const items = [...heavy.map(t => ({ text:t, match:true })), ...light.map(t => ({ text:t, match:false }))];
-      return { prompt:'اصطد الحروف المفخّمة (الثقيلة): خ ص ض ط ظ غ ق', items };
+      return { prompt:t('mCatchTafkhim'), items };
     },
     laamRules(){
       const items = [
         { text:'الشَّمْسُ', match:true }, { text:'الرَّحْمَن', match:true }, { text:'النَّاسُ', match:true },
         { text:'الْقَمَرُ', match:false }, { text:'الْعِلْمُ', match:false }, { text:'الْكِتَابُ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها لام شمسية (تُدغم ولا تُنطق)', items };
+      return { prompt:t('mCatchLaamShamsi'), items };
     },
     raaRules(){
       const items = [
         { text:'رَبَّنَا', match:true }, { text:'رُزِقْنَا', match:true }, { text:'مِرْآة', match:false },
         { text:'رِزْقٌ', match:false }, { text:'خَيْرٌ', match:false }, { text:'فِرْعَوْنَ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها راء مفخّمة (بعد فتح أو ضم)', items };
+      return { prompt:t('mCatchRaaHeavy'), items };
     },
     letterHarakahMix(){
       const combos = ['بَ','بُ','بِ','تَ','تُ','تِ','جَ','جُ','جِ','سَ','سُ','سِ','مَ','مُ','مِ','رَ','رُ','رِ'];
       const target = combos[Math.floor(Math.random()*combos.length)];
-      return { prompt:`اصطد الحرف بحركته: ${target}`, items: combos.map(c => ({ text:c, match:c===target })) };
+      return { prompt:tf('mCatchLetterHarakah',{x:target}), items: combos.map(c => ({ text:c, match:c===target })) };
     },
     deepQalqalah(){
       const items = [
         { text:'يَقْطَعُ', match:true }, { text:'يَجْعَلُ', match:true }, { text:'أَبْصَارُهُمْ', match:true },
         { text:'يَعْلَمُ', match:false }, { text:'يَذْهَبُ', match:false }, { text:'يَسْمَعُ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها قلقلة داخل الكلمة', items };
+      return { prompt:t('mCatchQalqalahWord'), items };
     },
     deepNoonMeem(){
       const items = [
         { text:'مِنْ بَعْدِ', match:true }, { text:'مِنْ رَبِّهِمْ', match:true }, { text:'أَنْتُمْ', match:true },
         { text:'كَتَبَ', match:false }, { text:'ذَهَبَ', match:false }, { text:'قَرَأَ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها نون أو ميم ساكنة', items };
+      return { prompt:t('mCatchNoonMeemWord'), items };
     },
     deepTafkhim(){
       const items = [
         { text:'الظَّالِمِينَ', match:true }, { text:'الصَّالِحَاتِ', match:true }, { text:'قَالُوا', match:true },
         { text:'الَّذِينَ', match:false }, { text:'الْمُؤْمِنِينَ', match:false }, { text:'السَّمَاءِ', match:false }
       ];
-      return { prompt:'اصطد الكلمات التي فيها حرف مفخّم (خ ص ض ط ظ غ ق)', items };
+      return { prompt:t('mCatchTafkhimWord'), items };
     }
   };
   const MISSIONS_BY_SECTION_LEVEL = {
@@ -1928,7 +2329,14 @@ const Games = (function(){
     }
   }
 
-  return { init, leave, showScreen, selectLevel, chooseSection, startGame, kickBall, useHint };
+  function onLanguageChange(){
+    const activeScreen = document.querySelector('#game-portal .screen.active');
+    if(activeScreen && !['menu-screen','level-screen','section-screen','end-screen'].includes(activeScreen.id)){
+      showScreen('menu-screen');
+    }
+  }
+
+  return { init, leave, showScreen, selectLevel, chooseSection, startGame, kickBall, useHint, onLanguageChange };
 })();
 
 /* ========================================================
@@ -1997,12 +2405,12 @@ const Mushaf = (function(){
   ];
 
   const COLORING_ROUNDS = [
-    { targetRule:'red', question:'حرف ممدود', items:[{char:'كَ',rule:'none'},{char:'ا',rule:'red'},{char:'نَ',rule:'none'}] },
-    { targetRule:'red', question:'حرف ممدود', items:[{char:'دِ',rule:'none'},{char:'ي',rule:'red'},{char:'نِ',rule:'none'}] },
-    { targetRule:'green', question:'حكم إخفاء', items:[{char:'مِ',rule:'none'},{char:'نْ',rule:'green'},{char:' ',rule:'none'},{char:'شَ',rule:'none'},{char:'رِّ',rule:'none'}] },
-    { targetRule:'green', question:'حكم إدغام', items:[{char:'يَكُ',rule:'none'},{char:'نْ',rule:'green'},{char:' ',rule:'none'},{char:'لَ',rule:'none'},{char:'هُ',rule:'none'}] },
-    { targetRule:'blue', question:'حرف قلقلة', items:[{char:'يَ',rule:'none'},{char:'لِ',rule:'none'},{char:'د',rule:'blue'},{char:'ْ',rule:'none'}] },
-    { targetRule:'blue', question:'حرف قلقلة', items:[{char:'أَ',rule:'none'},{char:'ب',rule:'blue'},{char:'ْتَرُ',rule:'none'}] }
+    { targetRule:'red', questionKey:'maddedLetter', items:[{char:'كَ',rule:'none'},{char:'ا',rule:'red'},{char:'نَ',rule:'none'}] },
+    { targetRule:'red', questionKey:'maddedLetter', items:[{char:'دِ',rule:'none'},{char:'ي',rule:'red'},{char:'نِ',rule:'none'}] },
+    { targetRule:'green', questionKey:'qIkhfaRule', items:[{char:'مِ',rule:'none'},{char:'نْ',rule:'green'},{char:' ',rule:'none'},{char:'شَ',rule:'none'},{char:'رِّ',rule:'none'}] },
+    { targetRule:'green', questionKey:'qIdghamRule', items:[{char:'يَكُ',rule:'none'},{char:'نْ',rule:'green'},{char:' ',rule:'none'},{char:'لَ',rule:'none'},{char:'هُ',rule:'none'}] },
+    { targetRule:'blue', questionKey:'qQalqalahLetter', items:[{char:'يَ',rule:'none'},{char:'لِ',rule:'none'},{char:'د',rule:'blue'},{char:'ْ',rule:'none'}] },
+    { targetRule:'blue', questionKey:'qQalqalahLetter', items:[{char:'أَ',rule:'none'},{char:'ب',rule:'blue'},{char:'ْتَرُ',rule:'none'}] }
   ];
 
   async function init(){
@@ -2017,10 +2425,19 @@ const Mushaf = (function(){
     }
   }
 
+  const SURAH_NAME_I18N = {
+    falaq:{ar:'الفلق',en:'Al-Falaq',tr:'Felak',ru:'Аль-Фаляк',zh:'费拉格',hi:'अल-फ़लक़',ur:'الفلق',fa:'الفلق'},
+    ikhlas:{ar:'الإخلاص',en:'Al-Ikhlas',tr:'İhlas',ru:'Аль-Ихлас',zh:'伊赫拉斯',hi:'अल-इख़्लास',ur:'الاخلاص',fa:'اخلاص'},
+    nasr:{ar:'النصر',en:'An-Nasr',tr:'Nasr',ru:'Ан-Наср',zh:'援助',hi:'अन-नस्र',ur:'النصر',fa:'نصر'},
+    kawthar:{ar:'الكوثر',en:'Al-Kawthar',tr:'Kevser',ru:'Аль-Каусар',zh:'考赛尔',hi:'अल-कौसर',ur:'الکوثر',fa:'کوثر'},
+    nas:{ar:'الناس',en:'An-Nas',tr:'Nas',ru:'Ан-Нас',zh:'people人类',hi:'अन-नास',ur:'الناس',fa:'ناس'}
+  };
+  function surahName(id){ return (SURAH_NAME_I18N[id] && SURAH_NAME_I18N[id][currentLang]) || SURAH_NAME_I18N[id].ar; }
+
   function renderSurahBar(){
     const bar = document.getElementById('surah-bar');
     bar.innerHTML = SURAHS.map(s =>
-      `<button class="surah-chip ${s.id===activeSurahId?'active':''}" onclick="Mushaf.loadSurah('${s.id}')">سورة ${s.name}</button>`
+      `<button class="surah-chip ${s.id===activeSurahId?'active':''}" onclick="Mushaf.loadSurah('${s.id}')">${surahName(s.id)}</button>`
     ).join('');
   }
 
@@ -2032,7 +2449,7 @@ const Mushaf = (function(){
     container.innerHTML = surah.ayat.map((a, i) =>
       `<div class="ayah" onclick="Mushaf.showRule(this,'${id}',${i})">${a.html} (${i+1})</div>`
     ).join(' ');
-    document.getElementById('exp-text').innerText = 'اختر آية لترى شرح التجويد.';
+    document.getElementById('exp-text').innerText = t('chooseAyahPrompt');
     currentPlainText = '';
   }
 
@@ -2055,7 +2472,7 @@ const Mushaf = (function(){
     const expText = document.getElementById('exp-text');
     const expPanel = document.getElementById('exp-panel');
     expIcon.style.color = colorVar;
-    expText.innerHTML = `<strong style="color:${colorVar}">آية ${ayahIdx+1}:</strong> ${ayah.exp}`;
+    expText.innerHTML = `<strong style="color:${colorVar}">${t('ayahLabel')} ${ayahIdx+1}:</strong> ${ayah.exp}`;
     expPanel.classList.add('show');
   }
 
@@ -2074,9 +2491,9 @@ const Mushaf = (function(){
 
   function renderLevelBar(){
     const bar = document.getElementById('md-level-bar');
-    const labels = [{n:1,l:'🟢 سهل'},{n:2,l:'🟡 متوسط'},{n:3,l:'🔴 صعب'}];
+    const labels = [{n:1,e:'🟢',key:'levelEasy'},{n:2,e:'🟡',key:'levelMedium'},{n:3,e:'🔴',key:'levelHard'}];
     bar.innerHTML = labels.map(x =>
-      `<button class="md-level-btn ${mdLevel===x.n?'active':''}" onclick="Mushaf.setLevel(${x.n})">${x.l}</button>`
+      `<button class="md-level-btn ${mdLevel===x.n?'active':''}" onclick="Mushaf.setLevel(${x.n})">${x.e} ${t(x.key)}</button>`
     ).join('');
   }
   function setLevel(n){ mdLevel = n; renderLevelBar(); loadRandomLevel(); }
@@ -2098,7 +2515,7 @@ const Mushaf = (function(){
     const pool = mdLevel === 3 ? COLORING_ROUNDS : COLORING_ROUNDS.filter(r => r.items.length <= (mdLevel === 1 ? 3 : 5));
     const level = (pool.length ? pool : COLORING_ROUNDS)[Math.floor(Math.random() * (pool.length ? pool.length : COLORING_ROUNDS.length))];
     let qColor = level.targetRule === 'red' ? 'var(--md-red)' : (level.targetRule === 'green' ? 'var(--md-green)' : 'var(--md-blue)');
-    document.getElementById('game-question').innerHTML = `ابحث عن: <strong style="color:${qColor};">${level.question}</strong> ولونه!`;
+    document.getElementById('game-question').innerHTML = `${t('searchFor')} <strong style="color:${qColor};">${t(level.questionKey)}</strong> ${t('colorIt')}`;
     const wordContainer = document.createElement('div');
     wordContainer.className = 'hollow-word';
     level.items.forEach(item => {
@@ -2141,7 +2558,18 @@ const Mushaf = (function(){
     setTimeout(loadRandomLevel, 1400);
   }
 
-  return { init, switchTab, showRule, selectPen, loadSurah, speakActive, setLevel };
+  function onLanguageChange(){
+    renderSurahBar();
+    const quranTabActive = document.getElementById('quran-tab').classList.contains('active');
+    if(quranTabActive){
+      loadSurah(activeSurahId);
+    } else {
+      renderLevelBar();
+      loadRandomLevel();
+    }
+  }
+
+  return { init, switchTab, showRule, selectPen, loadSurah, speakActive, setLevel, onLanguageChange };
 })();
 
 App.init();
